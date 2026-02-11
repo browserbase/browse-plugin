@@ -1,24 +1,24 @@
 {
-  "name": "cursor-plugin-starters",
+  "name": "browserbase",
   "owner": {
-    "name": "Your Org",
-    "email": "plugins@example.com"
+    "name": "Browserbase",
+    "email": "support@browserbase.com"
   },
   "metadata": {
-    "description": "Starter marketplace template for Cursor plugins",
-    "version": "0.1.0",
+    "description": "Browser automation tools for Cursor",
+    "version": "1.0.0",
     "pluginRoot": "plugins"
   },
   "plugins": [
     {
-      "name": "starter-simple",
-      "source": "./plugins/starter-simple",
-      "description": "Minimal plugin with rules and skills only"
+      "name": "browse",
+      "source": "browse",
+      "description": "Automate web browser interactions using natural language. Navigate pages, click elements, fill forms, extract data, and take screenshots -- all controlled by Cursor's model via MCP tools."
     },
     {
-      "name": "starter-advanced",
-      "source": "./plugins/starter-advanced",
-      "description": "Full-featured plugin with rules, skills, agents, commands, hooks, and MCP"
+      "name": "functions",
+      "source": "functions",
+      "description": "Deploy serverless browser automation to Browserbase cloud using the bb CLI. Create, test, and publish cloud functions for scheduled or webhook-triggered browser tasks."
     }
   ]
 }

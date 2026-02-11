@@ -1,0 +1,16 @@
+---
+description: Best practices for browser automation tasks
+alwaysApply: false
+globs:
+  - "**/*"
+---
+
+browser-automation-practices:
+
+- Always call browser_navigate before any other browser tool.
+- Call browser_snapshot to discover interactive elements and their CSS selectors before clicking or typing.
+- Take a screenshot after important actions to confirm the expected result.
+- Prefer specific selectors: #id, [data-testid], [name], [aria-label] over generic class or tag selectors.
+- Use browser_wait after actions that trigger page loads or dynamic content before interacting again.
+- Close the browser with browser_close when the automation task is complete.
+- For data extraction, prefer browser_evaluate with a single JavaScript expression over multiple individual tool calls.

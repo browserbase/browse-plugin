@@ -1,0 +1,13 @@
+{
+  "name": "functions",
+  "displayName": "Browserbase Functions",
+  "version": "1.0.0",
+  "description": "Deploy serverless browser automation to Browserbase cloud. Create, test, and publish cloud functions for scheduled or webhook-triggered browser tasks.",
+  "author": {
+    "name": "Browserbase",
+    "email": "support@browserbase.com"
+  },
+  "license": "MIT",
+  "keywords": ["serverless", "functions", "deployment", "cloud", "webhook", "scheduled-automation"],
+  "logo": "assets/logo.svg"
+}

@@ -1,14 +1,31 @@
-# Environment and secrets
-.env
-.env.*
-!.env.example
+# Dependencies
+node_modules/
 
-# OS and editor
+# Build output
+dist/
+
+# Chrome browser profile (copied from user profile)
+.chrome-profile/
+.chrome-pid
+
+# Runtime artifacts
+agent/browser_screenshots/*.png
+agent/downloads/*
+!agent/browser_screenshots/.gitkeep
+!agent/downloads/.gitkeep
+
+# Environment
+.env
+.env.local
+
+# Network debug captures
+network-capture.json
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Editor
 *.swp
 *.swo
-
-# Logs and temp
-*.log
-tmp/
-temp/
+*~

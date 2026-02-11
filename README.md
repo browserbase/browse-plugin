@@ -1,34 +1,79 @@
-# Cursor plugin template
+# Browserbase for Cursor
 
-Build and publish Cursor Marketplace plugins from a single repo.
+Browser automation plugins for the Cursor IDE Marketplace. Control a real Chrome browser through natural language -- navigate, click, type, extract data, and take screenshots.
 
-Two starter plugins are included:
+## Plugins
 
-- **starter-simple**: rules and skills only
-- **starter-advanced**: rules, skills, agents, commands, hooks, MCP, and scripts
+| Plugin | Description |
+|--------|-------------|
+| [browse](plugins/browse/) | Automate browser interactions via MCP tools. Navigate pages, fill forms, extract data, take screenshots. No API key needed for local mode. |
+| [functions](plugins/functions/) | Deploy serverless browser automation to Browserbase cloud using the `bb` CLI. |
 
-## Getting started
+## Quick start
 
-[Use this template](https://github.com/cursor/plugin-template/generate) to create a new repository, then customize:
+### Browse plugin
 
-1. `.cursor-plugin/marketplace.json`: set marketplace `name`, `owner`, and `metadata`.
-2. `plugins/*/.cursor-plugin/plugin.json`: set `name` (lowercase kebab-case), `displayName`, `author`, `description`, `keywords`, `license`, and `version`.
-3. Replace placeholder rules, skills, agents, commands, hooks, scripts, and logos.
+```bash
+cd plugins/browse
+npm install      # Installs dependencies and auto-builds TypeScript
+```
 
-To add more plugins, see `docs/add-a-plugin.md`.
+The MCP server starts automatically when the plugin is active in Cursor. Just ask:
 
-## Single plugin vs multi-plugin
+- *"Go to Hacker News and get the top 5 stories"*
+- *"Fill out the signup form on example.com"*
+- *"Take a screenshot of localhost:3000"*
 
-This template defaults to **multi-plugin** (multiple plugins in one repo).
+### Browserbase cloud (optional)
 
-For a **single plugin**, move your plugin folder contents to the repository root, keep one `.cursor-plugin/plugin.json`, and remove `.cursor-plugin/marketplace.json`.
+For stealth browsing, proxies, and CAPTCHA solving:
 
-## Submission checklist
+```bash
+export BROWSERBASE_API_KEY="your-api-key"
+export BROWSERBASE_PROJECT_ID="your-project-id"
+```
 
-- Each plugin has a valid `.cursor-plugin/plugin.json`.
-- Plugin names are unique, lowercase, and kebab-case.
-- `.cursor-plugin/marketplace.json` entries map to real plugin folders.
-- All frontmatter metadata is present in rule, skill, agent, and command files.
-- Logos are committed and referenced with relative paths.
-- `node scripts/validate-template.mjs` passes.
-- Repository link is ready for submission to the Cursor team (Slack or `kniparko@anysphere.com`).
+Get credentials at [browserbase.com/settings](https://browserbase.com/settings).
+
+## Architecture
+
+The browse plugin runs an MCP server over stdio that wraps Playwright:
+
+```
+Cursor Model  ──MCP tool call──▶  MCP Server  ──Playwright──▶  Chrome
+     ▲                                │
+     │                                │
+     └──── screenshot file path ──────┘
+     └──── interactive elements ──────┘
+```
+
+- **No API key** needed for local Chrome automation
+- **Headed browser** -- you can watch the automation happen
+- **10 MCP tools**: navigate, click, type, snapshot, screenshot, scroll, evaluate, select, wait, close
+- **Persistent sessions** -- cookies and login state carry over via Chrome profile
+
+## Validation
+
+```bash
+node scripts/validate-template.mjs
+```
+
+## Troubleshooting
+
+### Chrome not found
+
+- **macOS/Windows**: Install from [google.com/chrome](https://www.google.com/chrome/)
+- **Linux**: `sudo apt install google-chrome-stable`
+
+### Profile refresh
+
+```bash
+rm -rf plugins/browse/.chrome-profile
+```
+
+## Resources
+
+- [Playwright Documentation](https://playwright.dev)
+- [Browserbase](https://browserbase.com)
+- [MCP Specification](https://modelcontextprotocol.io)
+- [Cursor Marketplace](https://cursor.com)

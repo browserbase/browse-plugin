@@ -1,0 +1,24 @@
+{
+  "name": "browserbase-browse",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "browser": "./dist/src/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "postinstall": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "dotenv": "^17.2.4",
+    "playwright-core": "^1.52.0",
+    "sharp": "^0.34.4",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.0"
+  }
+}
