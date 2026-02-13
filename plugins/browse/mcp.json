@@ -2,7 +2,8 @@
   "mcpServers": {
     "browser": {
       "command": "node",
-      "args": ["dist/src/mcp-server.js"]
+      "args": ["${CURSOR_PLUGIN_ROOT}/dist/src/mcp-server.js"],
+      "cwd": "${CURSOR_PLUGIN_ROOT}"
     }
   }
 }
