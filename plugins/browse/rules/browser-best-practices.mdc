@@ -8,9 +8,14 @@ globs:
 browser-automation-practices:
 
 - Always call browser_navigate before any other browser tool.
-- Call browser_snapshot to discover interactive elements and their CSS selectors before clicking or typing.
+- Call browser_snapshot to get the accessibility tree with element refs before clicking, filling, or selecting.
+- Use element refs (e.g., @0-5) from browser_snapshot to target elements -- never guess selectors.
+- After each snapshot, refs are fresh. Always re-snapshot after page changes before acting again.
 - Take a screenshot after important actions to confirm the expected result.
-- Prefer specific selectors: #id, [data-testid], [name], [aria-label] over generic class or tag selectors.
+- Use browser_fill for form inputs (fills by ref and presses Enter by default). Use browser_type for raw text to the focused element.
+- Use browser_press for keyboard shortcuts (Enter, Tab, Escape, Cmd+A, etc.).
 - Use browser_wait after actions that trigger page loads or dynamic content before interacting again.
+- Use browser_get for quick page info (url, title, text) instead of a full snapshot when you only need metadata.
+- Use browser_evaluate with a single JavaScript expression for bulk data extraction over multiple individual tool calls.
+- For multi-tab workflows, use browser_pages to list tabs and browser_switch_tab to change context.
 - Close the browser with browser_close when the automation task is complete.
-- For data extraction, prefer browser_evaluate with a single JavaScript expression over multiple individual tool calls.

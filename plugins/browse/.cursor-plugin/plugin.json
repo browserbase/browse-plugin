@@ -1,13 +1,13 @@
 {
   "name": "browse",
   "displayName": "Browserbase Browse",
-  "version": "1.0.0",
-  "description": "Browser automation for Cursor. Navigate, click, type, extract data, and take screenshots -- powered by Playwright and controlled by Cursor's model via MCP.",
+  "version": "2.0.0",
+  "description": "Browser automation for Cursor. Navigate, click, fill forms, extract data, capture network, manage tabs, and take screenshots -- powered by browse-cli and controlled via MCP.",
   "author": {
     "name": "Browserbase",
     "email": "support@browserbase.com"
   },
   "license": "MIT",
-  "keywords": ["browser", "automation", "web-scraping", "playwright", "screenshots", "mcp"],
+  "keywords": ["browser", "automation", "web-scraping", "browse-cli", "screenshots", "mcp", "stagehand"],
   "logo": "assets/logo.svg"
 }

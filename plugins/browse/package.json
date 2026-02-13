@@ -1,6 +1,6 @@
 {
   "name": "browserbase-browse",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "private": true,
   "bin": {
@@ -11,10 +11,10 @@
     "postinstall": "npm run build"
   },
   "dependencies": {
+    "@browserbasehq/browse-cli": "^0.1.4",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "dotenv": "^17.2.4",
-    "playwright-core": "^1.52.0",
-    "sharp": "^0.34.4",
+    "playwright": "^1.52.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {

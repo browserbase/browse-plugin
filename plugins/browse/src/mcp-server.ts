@@ -3,259 +3,63 @@
 /**
  * MCP server for browser automation.
  *
- * Holds the Playwright browser connection **in-process** so the WebSocket
- * stays open across tool calls.  This is critical for Browserbase cloud
- * mode where the session dies as soon as every client disconnects.
+ * Two backends depending on environment:
  *
- * For local Chrome mode the old CLI-spawning approach also worked (Chrome
- * stays alive independently), but keeping everything in-process is simpler
- * and consistent for both modes.
+ * - **Local mode** (default): shells out to @browserbasehq/browse-cli.
+ *   The browse daemon manages Chrome lifecycle and keeps state between calls.
+ *
+ * - **Browserbase cloud mode** (BROWSERBASE_API_KEY + BROWSERBASE_PROJECT_ID):
+ *   keeps a Playwright CDP connection alive in-process. This is required
+ *   because BB sessions die when the last client disconnects, so the
+ *   per-command `--ws` approach doesn't work.
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { chromium, type Browser, type Page, type BrowserContext } from 'playwright-core';
-import { existsSync, mkdirSync, writeFileSync, readFileSync, unlinkSync } from 'fs';
-import { spawn, type ChildProcess } from 'child_process';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import { join, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import {
-  findLocalChrome,
-  prepareChromeProfile,
-  takeScreenshot,
-  extractInteractiveElements,
-} from './browser-utils.js';
+import { isBrowserbaseMode, clearCachedSession } from './browserbase.js';
+import * as bb from './bb-browser.js';
 
 // ---------- Resolve paths & load env ----------
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-// dist/src/mcp-server.js -> dist/src -> dist -> plugin-root
 const PLUGIN_ROOT = resolve(__dirname, '..', '..');
 
 dotenv.config({ path: join(PLUGIN_ROOT, '.env') });
 
-const CDP_PORT = 9222;
+const BROWSE_BIN = join(PLUGIN_ROOT, 'node_modules', '.bin', 'browse');
+const BB_MODE = isBrowserbaseMode();
 
-// ---------- Persistent browser state ----------
+const execFileAsync = promisify(execFile);
 
-let _browser: Browser | null = null;
-let _context: BrowserContext | null = null;
-let _page: Page | null = null;
-let _chromeProcess: ChildProcess | null = null;
-
-/**
- * Check if Chrome is already running on the CDP port.
- */
-async function isChromeRunning(): Promise<boolean> {
-  try {
-    const response = await fetch(`http://127.0.0.1:${CDP_PORT}/json/version`);
-    return response.ok;
-  } catch {
-    return false;
-  }
+if (BB_MODE) {
+  console.error('[mcp] Browserbase cloud mode — using in-process Playwright connection');
+} else {
+  console.error('[mcp] Local mode — using browse-cli daemon');
 }
 
-/**
- * Get the WebSocket debugger URL from a running Chrome instance.
- */
-async function getWsUrl(): Promise<string> {
-  const response = await fetch(`http://127.0.0.1:${CDP_PORT}/json/version`);
-  const data = (await response.json()) as { webSocketDebuggerUrl: string };
-  return data.webSocketDebuggerUrl;
-}
+// ---------- Local mode: browse-cli runner ----------
 
-/**
- * Returns the current page, lazily initialising the browser on first call.
- * Subsequent calls reuse the same connection.
- */
-async function getPage(): Promise<Page> {
-  if (_page && !_page.isClosed()) {
-    return _page;
+async function runBrowse(...args: string[]): Promise<Record<string, unknown>> {
+  const { stdout, stderr } = await execFileAsync(BROWSE_BIN, ['--json', ...args], {
+    timeout: 60_000,
+    env: process.env,
+  });
+
+  if (stderr) {
+    console.error('[browse]', stderr.trim());
   }
-
-  // If we had a stale reference, reset everything
-  _browser = null;
-  _context = null;
-  _page = null;
-
-  const bbApiKey = process.env.BROWSERBASE_API_KEY;
-  const bbProjectId = process.env.BROWSERBASE_PROJECT_ID;
-
-  if (bbApiKey && bbProjectId) {
-    // --- Browserbase cloud mode ---
-    console.error('[browser] Creating Browserbase session…');
-
-    const sessionRes = await fetch('https://api.browserbase.com/v1/sessions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-bb-api-key': bbApiKey,
-      },
-      body: JSON.stringify({ projectId: bbProjectId }),
-    });
-
-    if (!sessionRes.ok) {
-      const errText = await sessionRes.text();
-      throw new Error(
-        `Browserbase session creation failed (${sessionRes.status}): ${errText}`,
-      );
-    }
-
-    const session = (await sessionRes.json()) as { id: string; connectUrl: string };
-    console.error('[browser] Connected to Browserbase session', session.id);
-
-    _browser = await chromium.connectOverCDP(session.connectUrl);
-    _context = _browser.contexts()[0] ?? (await _browser.newContext());
-    _page = _context.pages()[0] ?? (await _context.newPage());
-
-    return _page;
-  }
-
-  // --- Local Chrome mode ---
-  const chromePath = findLocalChrome();
-  if (!chromePath) {
-    throw new Error(
-      'Chrome not found. Install Google Chrome or set BROWSERBASE_API_KEY + BROWSERBASE_PROJECT_ID for cloud mode.',
-    );
-  }
-
-  let chromeReady = await isChromeRunning();
-
-  if (chromeReady) {
-    console.error('[browser] Reusing existing Chrome on port', CDP_PORT);
-  } else {
-    const tempUserDataDir = join(PLUGIN_ROOT, '.chrome-profile');
-    prepareChromeProfile(PLUGIN_ROOT);
-
-    _chromeProcess = spawn(
-      chromePath,
-      [
-        `--remote-debugging-port=${CDP_PORT}`,
-        `--user-data-dir=${tempUserDataDir}`,
-        '--window-size=1280,720',
-        '--disable-blink-features=AutomationControlled',
-      ],
-      { stdio: 'ignore', detached: false },
-    );
-
-    if (_chromeProcess.pid) {
-      const pidFilePath = join(PLUGIN_ROOT, '.chrome-pid');
-      writeFileSync(
-        pidFilePath,
-        JSON.stringify({ pid: _chromeProcess.pid, startTime: Date.now() }),
-      );
-    }
-
-    for (let i = 0; i < 50; i++) {
-      if (await isChromeRunning()) {
-        chromeReady = true;
-        break;
-      }
-      await new Promise((r) => setTimeout(r, 300));
-    }
-
-    if (!chromeReady) {
-      throw new Error('Chrome failed to start within 15 seconds');
-    }
-    console.error('[browser] Launched local Chrome on port', CDP_PORT);
-  }
-
-  const wsUrl = await getWsUrl();
-  _browser = await chromium.connectOverCDP(wsUrl);
-  _context = _browser.contexts()[0] ?? (await _browser.newContext());
-  _page = _context.pages()[0] ?? (await _context.newPage());
-
-  // Wait for the page to be ready
-  let retries = 0;
-  while (retries < 30) {
-    try {
-      await _page.evaluate('document.readyState');
-      break;
-    } catch {
-      await new Promise((r) => setTimeout(r, 100));
-      retries++;
-    }
-  }
-
-  // Ensure downloads dir exists
-  const downloadsPath = join(PLUGIN_ROOT, 'agent', 'downloads');
-  if (!existsSync(downloadsPath)) {
-    mkdirSync(downloadsPath, { recursive: true });
-  }
-
-  return _page;
-}
-
-/**
- * Verify a PID belongs to a Chrome process before killing it.
- */
-async function verifyIsChromeProcess(pid: number): Promise<boolean> {
-  try {
-    const { exec } = await import('child_process');
-    const { promisify } = await import('util');
-    const execAsync = promisify(exec);
-
-    if (process.platform === 'darwin' || process.platform === 'linux') {
-      const { stdout } = await execAsync(`ps -p ${pid} -o comm=`);
-      const processName = stdout.trim().toLowerCase();
-      return processName.includes('chrome') || processName.includes('chromium');
-    } else if (process.platform === 'win32') {
-      const { stdout } = await execAsync(
-        `tasklist /FI "PID eq ${pid}" /FO CSV /NH`,
-      );
-      return stdout.toLowerCase().includes('chrome');
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Close the browser and kill Chrome if we started it.
- */
-async function closeBrowser(): Promise<void> {
-  const pidFilePath = join(PLUGIN_ROOT, '.chrome-pid');
 
   try {
-    if (_context) await _context.close().catch(() => {});
-    if (_browser) await _browser.close().catch(() => {});
+    return JSON.parse(stdout) as Record<string, unknown>;
   } catch {
-    // already closed
-  }
-  _page = null;
-  _context = null;
-  _browser = null;
-
-  // For local mode – force-kill Chrome if still alive
-  try {
-    if (await isChromeRunning()) {
-      if (existsSync(pidFilePath)) {
-        const pidData = JSON.parse(readFileSync(pidFilePath, 'utf8'));
-        const { pid } = pidData;
-        if (await verifyIsChromeProcess(pid)) {
-          if (process.platform === 'win32') {
-            const { exec } = await import('child_process');
-            const { promisify } = await import('util');
-            const execAsync = promisify(exec);
-            await execAsync(`taskkill /PID ${pid} /F`);
-          } else {
-            process.kill(pid, 'SIGKILL');
-          }
-        }
-      }
-    }
-  } catch {
-    // ignore
-  } finally {
-    if (existsSync(pidFilePath)) {
-      try {
-        unlinkSync(pidFilePath);
-      } catch { /* ignore */ }
-    }
+    return { output: stdout.trim() };
   }
 }
 
@@ -281,27 +85,20 @@ async function safeTool(fn: () => Promise<Record<string, unknown>>) {
 
 // ---------- MCP Server ----------
 
-const server = new McpServer({ name: 'browser', version: '1.0.0' });
+const server = new McpServer({ name: 'browser', version: '2.0.0' });
 
 // --- browser_navigate ---
 server.registerTool(
   'browser_navigate',
   {
     description:
-      'Navigate to a URL in the browser. Launches Chrome automatically on first call. Returns page title and a screenshot file path.',
+      'Navigate to a URL in the browser. Launches Chrome automatically on first call. Returns page title and URL.',
     inputSchema: {
       url: z.string().describe('The URL to navigate to (include https://)'),
     },
   },
   async ({ url }) =>
-    safeTool(async () => {
-      const page = await getPage();
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await page.waitForTimeout(1000);
-      const title = await page.title();
-      const screenshot = await takeScreenshot(page, PLUGIN_ROOT);
-      return { success: true, title, url: page.url(), screenshot };
-    }),
+    safeTool(async () => (BB_MODE ? bb.bbNavigate(url) : runBrowse('open', url))),
 );
 
 // --- browser_click ---
@@ -309,19 +106,29 @@ server.registerTool(
   'browser_click',
   {
     description:
-      'Click an element on the page by CSS selector. Use browser_snapshot first to find the right selector.',
+      'Click an element on the page by ref. Use browser_snapshot first to get element refs. Refs look like @0-5.',
     inputSchema: {
-      selector: z.string().describe('CSS selector of the element to click'),
+      ref: z.string().describe('Element ref from snapshot (e.g., @0-5)'),
     },
   },
-  async ({ selector }) =>
-    safeTool(async () => {
-      const page = await getPage();
-      await page.click(selector, { timeout: 10_000 });
-      await page.waitForTimeout(500);
-      const screenshot = await takeScreenshot(page, PLUGIN_ROOT);
-      return { success: true, clicked: selector, screenshot };
-    }),
+  async ({ ref }) =>
+    safeTool(async () => (BB_MODE ? bb.bbClick(ref) : runBrowse('click', ref))),
+);
+
+// --- browser_click_xy ---
+server.registerTool(
+  'browser_click_xy',
+  {
+    description: 'Click at exact page coordinates.',
+    inputSchema: {
+      x: z.number().describe('X coordinate'),
+      y: z.number().describe('Y coordinate'),
+    },
+  },
+  async ({ x, y }) =>
+    safeTool(async () =>
+      BB_MODE ? bb.bbClickXY(x, y) : runBrowse('click_xy', String(x), String(y)),
+    ),
 );
 
 // --- browser_type ---
@@ -329,21 +136,73 @@ server.registerTool(
   'browser_type',
   {
     description:
-      'Clear an input field and type text into it. Use browser_snapshot to find the selector for the input.',
+      'Type text into the currently focused element. Use browser_click or browser_fill to focus an element first.',
     inputSchema: {
-      selector: z.string().describe('CSS selector of the input element'),
-      text: z.string().describe('Text to type into the field'),
+      text: z.string().describe('Text to type'),
+      delay: z.number().optional().describe('Delay between keystrokes in ms'),
     },
   },
-  async ({ selector, text }) =>
+  async ({ text, delay }) =>
     safeTool(async () => {
-      const page = await getPage();
-      await page.click(selector, { timeout: 10_000 });
-      await page.fill(selector, text);
-      await page.waitForTimeout(300);
-      const screenshot = await takeScreenshot(page, PLUGIN_ROOT);
-      return { success: true, selector, typed: text, screenshot };
+      if (BB_MODE) return bb.bbType(text, delay);
+      const args = ['type', text];
+      if (delay !== undefined) args.push('-d', String(delay));
+      return runBrowse(...args);
     }),
+);
+
+// --- browser_fill ---
+server.registerTool(
+  'browser_fill',
+  {
+    description:
+      'Fill an input field by ref. Clears the field first. Presses Enter after by default.',
+    inputSchema: {
+      ref: z.string().describe('Element ref from snapshot (e.g., @0-5)'),
+      value: z.string().describe('Value to fill'),
+      pressEnter: z
+        .boolean()
+        .optional()
+        .describe('Whether to press Enter after filling (default: true)'),
+    },
+  },
+  async ({ ref, value, pressEnter }) =>
+    safeTool(async () => {
+      if (BB_MODE) return bb.bbFill(ref, value, pressEnter ?? true);
+      const args = ['fill', ref, value];
+      if (pressEnter === false) args.push('--no-press-enter');
+      return runBrowse(...args);
+    }),
+);
+
+// --- browser_press ---
+server.registerTool(
+  'browser_press',
+  {
+    description:
+      'Press a key or key combination. Examples: Enter, Tab, Escape, Cmd+A, Shift+Tab.',
+    inputSchema: {
+      key: z.string().describe('Key to press (e.g., Enter, Tab, Cmd+A)'),
+    },
+  },
+  async ({ key }) =>
+    safeTool(async () => (BB_MODE ? bb.bbPress(key) : runBrowse('press', key))),
+);
+
+// --- browser_select ---
+server.registerTool(
+  'browser_select',
+  {
+    description: 'Select option(s) in a <select> element by ref.',
+    inputSchema: {
+      ref: z.string().describe('Element ref from snapshot (e.g., @0-5)'),
+      values: z.array(z.string()).describe('Value(s) to select'),
+    },
+  },
+  async ({ ref, values }) =>
+    safeTool(async () =>
+      BB_MODE ? bb.bbSelect(ref, values) : runBrowse('select', ref, ...values),
+    ),
 );
 
 // --- browser_snapshot ---
@@ -351,16 +210,20 @@ server.registerTool(
   'browser_snapshot',
   {
     description:
-      'Get all interactive elements on the page with their CSS selectors, roles, text, and state. Use this to find the right selector before clicking or typing. Returns elements like buttons, links, inputs, selects, and textareas.',
-    inputSchema: {},
+      'Get the accessibility tree snapshot with element refs. Use refs from the output to target elements in browser_click, browser_fill, and browser_select.',
+    inputSchema: {
+      compact: z
+        .boolean()
+        .optional()
+        .describe('Compact output without maps (default: true)'),
+    },
   },
-  async () =>
+  async ({ compact }) =>
     safeTool(async () => {
-      const page = await getPage();
-      const elements = await extractInteractiveElements(page);
-      const title = await page.title();
-      const url = page.url();
-      return { success: true, title, url, elementCount: elements.length, elements };
+      if (BB_MODE) return bb.bbSnapshot(compact ?? true);
+      const args = ['snapshot'];
+      if (compact !== false) args.push('-c');
+      return runBrowse(...args);
     }),
 );
 
@@ -369,14 +232,19 @@ server.registerTool(
   'browser_screenshot',
   {
     description:
-      'Take a screenshot of the current page and save it to disk. Returns the file path.',
-    inputSchema: {},
+      'Take a screenshot of the current page. Returns the file path.',
+    inputSchema: {
+      path: z.string().optional().describe('File path to save screenshot to'),
+      fullPage: z.boolean().optional().describe('Capture the full scrollable page'),
+    },
   },
-  async () =>
+  async ({ path, fullPage }) =>
     safeTool(async () => {
-      const page = await getPage();
-      const screenshot = await takeScreenshot(page, PLUGIN_ROOT);
-      return { success: true, screenshot };
+      if (BB_MODE) return bb.bbScreenshot(path, fullPage);
+      const args = ['screenshot'];
+      if (path) args.push(path);
+      if (fullPage) args.push('--full-page');
+      return runBrowse(...args);
     }),
 );
 
@@ -384,25 +252,56 @@ server.registerTool(
 server.registerTool(
   'browser_scroll',
   {
-    description: 'Scroll the page in a direction. Returns a screenshot after scrolling.',
+    description: 'Scroll the page at given coordinates.',
     inputSchema: {
-      direction: z
-        .enum(['up', 'down', 'left', 'right'])
-        .describe('Direction to scroll'),
-      amount: z.number().optional().describe('Pixels to scroll (default: 500)'),
+      x: z.number().describe('X coordinate to scroll at'),
+      y: z.number().describe('Y coordinate to scroll at'),
+      deltaX: z.number().optional().describe('Horizontal scroll amount (default: 0)'),
+      deltaY: z.number().optional().describe('Vertical scroll amount (default: 500)'),
     },
   },
-  async ({ direction, amount }) =>
-    safeTool(async () => {
-      const page = await getPage();
-      const px = amount ?? 500;
-      const deltaX = direction === 'left' ? -px : direction === 'right' ? px : 0;
-      const deltaY = direction === 'up' ? -px : direction === 'down' ? px : 0;
-      await page.mouse.wheel(deltaX, deltaY);
-      await page.waitForTimeout(500);
-      const screenshot = await takeScreenshot(page, PLUGIN_ROOT);
-      return { success: true, direction, amount: px, screenshot };
-    }),
+  async ({ x, y, deltaX, deltaY }) =>
+    safeTool(async () =>
+      BB_MODE
+        ? bb.bbScroll(x, y, deltaX ?? 0, deltaY ?? 500)
+        : runBrowse('scroll', String(x), String(y), String(deltaX ?? 0), String(deltaY ?? 500)),
+    ),
+);
+
+// --- browser_hover ---
+server.registerTool(
+  'browser_hover',
+  {
+    description: 'Hover at exact page coordinates.',
+    inputSchema: {
+      x: z.number().describe('X coordinate'),
+      y: z.number().describe('Y coordinate'),
+    },
+  },
+  async ({ x, y }) =>
+    safeTool(async () =>
+      BB_MODE ? bb.bbHover(x, y) : runBrowse('hover', String(x), String(y)),
+    ),
+);
+
+// --- browser_drag ---
+server.registerTool(
+  'browser_drag',
+  {
+    description: 'Drag from one point to another.',
+    inputSchema: {
+      fromX: z.number().describe('Start X coordinate'),
+      fromY: z.number().describe('Start Y coordinate'),
+      toX: z.number().describe('End X coordinate'),
+      toY: z.number().describe('End Y coordinate'),
+    },
+  },
+  async ({ fromX, fromY, toX, toY }) =>
+    safeTool(async () =>
+      BB_MODE
+        ? bb.bbDrag(fromX, fromY, toX, toY)
+        : runBrowse('drag', String(fromX), String(fromY), String(toX), String(toY)),
+    ),
 );
 
 // --- browser_evaluate ---
@@ -410,37 +309,37 @@ server.registerTool(
   'browser_evaluate',
   {
     description:
-      'Run arbitrary JavaScript in the browser page context. Returns the result as a string. Useful for extracting specific data or performing complex interactions.',
+      'Run JavaScript in the browser page context. Returns the result as a string.',
     inputSchema: {
       script: z.string().describe('JavaScript code to execute in the page context'),
     },
   },
   async ({ script }) =>
-    safeTool(async () => {
-      const page = await getPage();
-      const result = await page.evaluate(script);
-      return { success: true, result: result ?? null };
-    }),
+    safeTool(async () => (BB_MODE ? bb.bbEvaluate(script) : runBrowse('eval', script))),
 );
 
-// --- browser_select ---
+// --- browser_get ---
 server.registerTool(
-  'browser_select',
+  'browser_get',
   {
     description:
-      'Select an option in a <select> dropdown by its value. Returns a screenshot.',
+      'Get page info: url, title, text, html, value, or box. For text/html/value/box, provide a CSS selector.',
     inputSchema: {
-      selector: z.string().describe('CSS selector of the <select> element'),
-      value: z.string().describe('Value of the option to select'),
+      what: z
+        .enum(['url', 'title', 'text', 'html', 'value', 'box'])
+        .describe('What to get'),
+      selector: z
+        .string()
+        .optional()
+        .describe('CSS selector (required for text, html, value, box)'),
     },
   },
-  async ({ selector, value }) =>
+  async ({ what, selector }) =>
     safeTool(async () => {
-      const page = await getPage();
-      await page.selectOption(selector, value, { timeout: 10_000 });
-      await page.waitForTimeout(300);
-      const screenshot = await takeScreenshot(page, PLUGIN_ROOT);
-      return { success: true, selector, selected: value, screenshot };
+      if (BB_MODE) return bb.bbGet(what, selector);
+      const args = ['get', what];
+      if (selector) args.push(selector);
+      return runBrowse(...args);
     }),
 );
 
@@ -449,30 +348,177 @@ server.registerTool(
   'browser_wait',
   {
     description:
-      'Wait for an element to appear on the page, or wait a fixed number of milliseconds. Useful after navigation or actions that trigger page changes.',
+      'Wait for a load state, CSS selector, or fixed timeout.',
     inputSchema: {
-      selector: z
+      type: z
+        .enum(['load', 'selector', 'timeout'])
+        .describe('What to wait for: load state, CSS selector, or timeout'),
+      value: z
         .string()
         .optional()
-        .describe('CSS selector to wait for (omit to just wait a fixed time)'),
+        .describe(
+          'For load: state name (load/domcontentloaded/networkidle). For selector: CSS selector. For timeout: milliseconds.',
+        ),
       timeout: z
         .number()
         .optional()
-        .describe('Maximum time to wait in milliseconds (default: 5000)'),
+        .describe('Maximum wait time in milliseconds'),
     },
   },
-  async ({ selector, timeout }) =>
+  async ({ type, value, timeout }) =>
     safeTool(async () => {
-      const page = await getPage();
-      const ms = timeout ?? 5000;
+      if (BB_MODE) return bb.bbWait(type, value, timeout);
+      const args = ['wait', type];
+      if (value) args.push(value);
+      if (timeout !== undefined) args.push('-t', String(timeout));
+      return runBrowse(...args);
+    }),
+);
 
-      if (selector) {
-        await page.waitForSelector(selector, { timeout: ms });
-        return { success: true, waited: 'selector', selector };
-      } else {
-        await page.waitForTimeout(ms);
-        return { success: true, waited: 'timeout', ms };
+// --- browser_back ---
+server.registerTool(
+  'browser_back',
+  {
+    description: 'Go back in browser history.',
+    inputSchema: {},
+  },
+  async () => safeTool(async () => (BB_MODE ? bb.bbBack() : runBrowse('back'))),
+);
+
+// --- browser_forward ---
+server.registerTool(
+  'browser_forward',
+  {
+    description: 'Go forward in browser history.',
+    inputSchema: {},
+  },
+  async () => safeTool(async () => (BB_MODE ? bb.bbForward() : runBrowse('forward'))),
+);
+
+// --- browser_reload ---
+server.registerTool(
+  'browser_reload',
+  {
+    description: 'Reload the current page.',
+    inputSchema: {},
+  },
+  async () => safeTool(async () => (BB_MODE ? bb.bbReload() : runBrowse('reload'))),
+);
+
+// --- browser_pages ---
+server.registerTool(
+  'browser_pages',
+  {
+    description: 'List all open browser tabs.',
+    inputSchema: {},
+  },
+  async () => safeTool(async () => (BB_MODE ? bb.bbPages() : runBrowse('pages'))),
+);
+
+// --- browser_new_tab ---
+server.registerTool(
+  'browser_new_tab',
+  {
+    description: 'Open a new browser tab, optionally navigating to a URL.',
+    inputSchema: {
+      url: z.string().optional().describe('URL to open in the new tab'),
+    },
+  },
+  async ({ url }) =>
+    safeTool(async () => {
+      if (BB_MODE) return bb.bbNewTab(url);
+      const args = ['newpage'];
+      if (url) args.push(url);
+      return runBrowse(...args);
+    }),
+);
+
+// --- browser_switch_tab ---
+server.registerTool(
+  'browser_switch_tab',
+  {
+    description: 'Switch to a browser tab by index.',
+    inputSchema: {
+      index: z.number().describe('Tab index (from browser_pages)'),
+    },
+  },
+  async ({ index }) =>
+    safeTool(async () =>
+      BB_MODE ? bb.bbSwitchTab(index) : runBrowse('tab_switch', String(index)),
+    ),
+);
+
+// --- browser_close_tab ---
+server.registerTool(
+  'browser_close_tab',
+  {
+    description: 'Close a browser tab by index. Defaults to the last tab.',
+    inputSchema: {
+      index: z.number().optional().describe('Tab index to close (defaults to last)'),
+    },
+  },
+  async ({ index }) =>
+    safeTool(async () => {
+      if (BB_MODE) return bb.bbCloseTab(index);
+      const args = ['tab_close'];
+      if (index !== undefined) args.push(String(index));
+      return runBrowse(...args);
+    }),
+);
+
+// --- browser_highlight ---
+server.registerTool(
+  'browser_highlight',
+  {
+    description: 'Highlight an element on the page for visual debugging.',
+    inputSchema: {
+      ref: z.string().describe('Element ref or CSS selector to highlight'),
+    },
+  },
+  async ({ ref }) =>
+    safeTool(async () => {
+      if (BB_MODE) {
+        // No highlight in BB mode — just acknowledge
+        return { highlighted: ref, note: 'Highlight not available in cloud mode' };
       }
+      return runBrowse('highlight', ref);
+    }),
+);
+
+// --- browser_network ---
+server.registerTool(
+  'browser_network',
+  {
+    description:
+      'Network capture: on (start), off (stop), path (get capture dir), clear (delete captures).',
+    inputSchema: {
+      action: z
+        .enum(['on', 'off', 'path', 'clear'])
+        .describe('Network capture action'),
+    },
+  },
+  async ({ action }) =>
+    safeTool(async () => {
+      if (BB_MODE) {
+        return { note: 'Network capture not available in Browserbase cloud mode' };
+      }
+      return runBrowse('network', action);
+    }),
+);
+
+// --- browser_status ---
+server.registerTool(
+  'browser_status',
+  {
+    description: 'Check the browser daemon status.',
+    inputSchema: {},
+  },
+  async () =>
+    safeTool(async () => {
+      if (BB_MODE) {
+        return { mode: 'browserbase', connected: true };
+      }
+      return runBrowse('status');
     }),
 );
 
@@ -481,13 +527,15 @@ server.registerTool(
   'browser_close',
   {
     description:
-      'Close the browser and free resources. Call this when done with browser automation.',
+      'Stop the browser daemon and free resources. Call this when done with browser automation.',
     inputSchema: {},
   },
   async () =>
     safeTool(async () => {
-      await closeBrowser();
-      return { success: true, message: 'Browser closed' };
+      if (BB_MODE) return bb.bbClose();
+      const result = await runBrowse('stop');
+      clearCachedSession();
+      return result;
     }),
 );
 
@@ -501,14 +549,4 @@ async function main() {
 main().catch((err) => {
   console.error('MCP server failed to start:', err);
   process.exit(1);
-});
-
-// Cleanup on exit
-process.on('SIGINT', async () => {
-  await closeBrowser();
-  process.exit(0);
-});
-process.on('SIGTERM', async () => {
-  await closeBrowser();
-  process.exit(0);
 });
