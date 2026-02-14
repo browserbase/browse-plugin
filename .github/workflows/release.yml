@@ -55,7 +55,7 @@ jobs:
       # ---------- Package ----------
       - name: Create release tarball
         run: |
-          tar czf release.tar.gz \
+          tar czf /tmp/release.tar.gz \
             --exclude='.git' \
             --exclude='.env' \
             --exclude='.env.local' \
@@ -67,6 +67,7 @@ jobs:
             --exclude='*.swp' \
             .
 
+          mv /tmp/release.tar.gz release.tar.gz
           echo "Tarball size: $(du -h release.tar.gz | cut -f1)"
           echo "Contents:"
           tar tzf release.tar.gz | head -40
