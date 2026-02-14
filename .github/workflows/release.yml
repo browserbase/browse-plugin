@@ -29,7 +29,9 @@ jobs:
           # npm ci only installs the binary for the CI runner's OS/arch.
           # Force-install the binaries for every platform Cursor users run on
           # so the single tarball works everywhere.
-          npm install --no-save \
+          # --force bypasses the EBADPLATFORM check so npm installs
+          # native binaries for OSes/arches that don't match the CI runner.
+          npm install --no-save --force \
             @img/sharp-darwin-arm64 \
             @img/sharp-libvips-darwin-arm64 \
             @img/sharp-darwin-x64 \
