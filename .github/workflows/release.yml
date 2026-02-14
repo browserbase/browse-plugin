@@ -20,29 +20,9 @@ jobs:
           node-version: 20
 
       # ---------- browse plugin ----------
-      - name: Install browse dependencies
+      - name: Install and build browse
         working-directory: plugins/browse
-        run: |
-          npm ci
-
-          # sharp ships platform-specific native binaries as optional deps.
-          # npm ci only installs the binary for the CI runner's OS/arch.
-          # Force-install the binaries for every platform Cursor users run on
-          # so the single tarball works everywhere.
-          # --force bypasses the EBADPLATFORM check so npm installs
-          # native binaries for OSes/arches that don't match the CI runner.
-          npm install --no-save --force \
-            @img/sharp-darwin-arm64 \
-            @img/sharp-libvips-darwin-arm64 \
-            @img/sharp-darwin-x64 \
-            @img/sharp-libvips-darwin-x64 \
-            @img/sharp-linux-x64 \
-            @img/sharp-libvips-linux-x64 \
-            @img/sharp-win32-x64
-
-      - name: Build browse
-        working-directory: plugins/browse
-        run: npm run build
+        run: npm ci # postinstall runs `npm run build` automatically
 
       - name: Prune browse devDependencies
         working-directory: plugins/browse
@@ -61,16 +41,11 @@ jobs:
             --exclude='.env.local' \
             --exclude='.chrome-profile' \
             --exclude='.chrome-pid' \
-            --exclude='agent/browser_screenshots/*.png' \
-            --exclude='agent/downloads/*' \
             --exclude='.DS_Store' \
-            --exclude='*.swp' \
             .
 
           mv /tmp/release.tar.gz release.tar.gz
           echo "Tarball size: $(du -h release.tar.gz | cut -f1)"
-          echo "Contents:"
-          tar tzf release.tar.gz | head -40
 
       # ---------- Release ----------
       - name: Create GitHub Release
