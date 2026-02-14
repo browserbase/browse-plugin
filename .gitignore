@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Build output
+dist/
+
 # Chrome browser profile (copied from user profile)
 .chrome-profile/
 .chrome-pid

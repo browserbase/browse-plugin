@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ---------- browse plugin ----------
+      - name: Install browse dependencies
+        working-directory: plugins/browse
+        run: |
+          npm ci
+
+          # sharp ships platform-specific native binaries as optional deps.
+          # npm ci only installs the binary for the CI runner's OS/arch.
+          # Force-install the binaries for every platform Cursor users run on
+          # so the single tarball works everywhere.
+          npm install --no-save \
+            @img/sharp-darwin-arm64 \
+            @img/sharp-libvips-darwin-arm64 \
+            @img/sharp-darwin-x64 \
+            @img/sharp-libvips-darwin-x64 \
+            @img/sharp-linux-x64 \
+            @img/sharp-libvips-linux-x64 \
+            @img/sharp-win32-x64
+
+      - name: Build browse
+        working-directory: plugins/browse
+        run: npm run build
+
+      - name: Prune browse devDependencies
+        working-directory: plugins/browse
+        run: npm prune --omit=dev
+
+      # ---------- Validate ----------
+      - name: Validate plugin structure
+        run: node scripts/validate-template.mjs
+
+      # ---------- Package ----------
+      - name: Create release tarball
+        run: |
+          tar czf release.tar.gz \
+            --exclude='.git' \
+            --exclude='.env' \
+            --exclude='.env.local' \
+            --exclude='.chrome-profile' \
+            --exclude='.chrome-pid' \
+            --exclude='agent/browser_screenshots/*.png' \
+            --exclude='agent/downloads/*' \
+            --exclude='.DS_Store' \
+            --exclude='*.swp' \
+            .
+
+          echo "Tarball size: $(du -h release.tar.gz | cut -f1)"
+          echo "Contents:"
+          tar tzf release.tar.gz | head -40
+
+      # ---------- Release ----------
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release.tar.gz
+          generate_release_notes: true
