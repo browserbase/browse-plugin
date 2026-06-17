@@ -4,10 +4,10 @@
  * Keeps the CDP WebSocket connection alive for the lifetime of the
  * MCP server process. This is critical because Browserbase sessions
  * die as soon as every client disconnects -- so we can't use the
- * browse-cli's per-command `--ws` mode (which opens and closes a
+ * browse's per-command `--ws` mode (which opens and closes a
  * connection per invocation).
  *
- * Provides the same tool interface as the browse-cli based backend
+ * Provides the same tool interface as the browse based backend
  * (refs from the accessibility tree, JSON results).
  */
 
@@ -79,7 +79,7 @@ interface AXNode {
 
 /**
  * Walk the accessibility tree, assign refs, build the ref map,
- * and return a formatted string similar to browse-cli's compact snapshot.
+ * and return a formatted string similar to browse's compact snapshot.
  */
 function buildRefTree(root: AXNode): string {
   _refMap.clear();

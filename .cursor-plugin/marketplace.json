@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Browser automation tools for Cursor",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "pluginRoot": "plugins"
   },
   "plugins": [
@@ -14,11 +14,6 @@
       "name": "browse",
       "source": "browse",
       "description": "Automate web browser interactions using natural language. Navigate pages, click elements, fill forms, extract data, and take screenshots -- all controlled by Cursor's model via MCP tools."
-    },
-    {
-      "name": "functions",
-      "source": "functions",
-      "description": "Deploy serverless browser automation to Browserbase cloud using the bb CLI. Create, test, and publish cloud functions for scheduled or webhook-triggered browser tasks."
     }
   ]
 }

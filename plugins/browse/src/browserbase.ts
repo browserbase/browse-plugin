@@ -1,7 +1,7 @@
 /**
  * Browserbase cloud session management.
  *
- * Creates and caches a Browserbase session so the browse-cli daemon can
+ * Creates and caches a Browserbase session so the browse daemon can
  * connect to a remote Chrome instance via `--ws <connectUrl>`.
  *
  * Shared by both the CLI wrapper and the MCP server.

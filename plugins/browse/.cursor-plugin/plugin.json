@@ -1,13 +1,13 @@
 {
   "name": "browse",
   "displayName": "Browserbase Browse",
-  "version": "2.0.0",
-  "description": "Browser automation for Cursor. Navigate, click, fill forms, extract data, capture network, manage tabs, and take screenshots -- powered by browse-cli and controlled via MCP.",
+  "version": "2.1.0",
+  "description": "Browser automation for Cursor. Navigate, click, fill forms, extract data, capture network, manage tabs, and take screenshots -- powered by the browse CLI and controlled via MCP.",
   "author": {
     "name": "Browserbase",
     "email": "support@browserbase.com"
   },
   "license": "MIT",
-  "keywords": ["browser", "automation", "web-scraping", "browse-cli", "screenshots", "mcp", "stagehand"],
+  "keywords": ["browser", "automation", "web-scraping", "browse", "screenshots", "mcp", "stagehand"],
   "logo": "assets/logo.svg"
 }

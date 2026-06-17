@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Thin CLI wrapper around @browserbasehq/browse-cli.
+ * Thin CLI wrapper around browse.
  *
  * - If BROWSERBASE_API_KEY + BROWSERBASE_PROJECT_ID are set, creates a
  *   Browserbase cloud session and injects `--ws <connectUrl>` so the
@@ -72,7 +72,7 @@ async function main() {
 
   child.on('error', (err) => {
     console.error(`[browser] Failed to run browse: ${err.message}`);
-    console.error(`[browser] Make sure @browserbasehq/browse-cli is installed (npm install)`);
+    console.error(`[browser] Make sure browse is installed (npm install)`);
     process.exit(1);
   });
 

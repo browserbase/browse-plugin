@@ -5,7 +5,7 @@
  *
  * Two backends depending on environment:
  *
- * - **Local mode** (default): shells out to @browserbasehq/browse-cli.
+ * - **Local mode** (default): shells out to browse.
  *   The browse daemon manages Chrome lifecycle and keeps state between calls.
  *
  * - **Browserbase cloud mode** (BROWSERBASE_API_KEY + BROWSERBASE_PROJECT_ID):
@@ -41,10 +41,10 @@ const execFileAsync = promisify(execFile);
 if (BB_MODE) {
   console.error('[mcp] Browserbase cloud mode — using in-process Playwright connection');
 } else {
-  console.error('[mcp] Local mode — using browse-cli daemon');
+  console.error('[mcp] Local mode — using browse daemon');
 }
 
-// ---------- Local mode: browse-cli runner ----------
+// ---------- Local mode: browse runner ----------
 
 async function runBrowse(...args: string[]): Promise<Record<string, unknown>> {
   const { stdout, stderr } = await execFileAsync(BROWSE_BIN, ['--json', ...args], {

@@ -7,7 +7,6 @@ Browser automation plugins for the Cursor IDE Marketplace. Control a real Chrome
 | Plugin | Description |
 |--------|-------------|
 | [browse](plugins/browse/) | Automate browser interactions via MCP tools. Navigate pages, fill forms, extract data, take screenshots. No API key needed for local mode. |
-| [functions](plugins/functions/) | Deploy serverless browser automation to Browserbase cloud using the `bb` CLI. |
 
 ## Quick start
 
