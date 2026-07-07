@@ -19,16 +19,10 @@ jobs:
         with:
           node-version: 20
 
-      # ---------- browse plugin ----------
-      - name: Install and build browse
-        working-directory: plugins/browse
-        run: npm ci # postinstall runs `npm run build` automatically
-
-      - name: Prune browse devDependencies
-        working-directory: plugins/browse
-        run: npm prune --omit=dev
-
       # ---------- Validate ----------
+      # This repo is a static, no-codebase marketplace catalog: JSON manifests,
+      # a hosted MCP config, and the browse skill. There is nothing to install
+      # or build, so the release job only validates and packages the manifests.
       - name: Validate plugin structure
         run: node scripts/validate-template.mjs
 
@@ -39,8 +33,6 @@ jobs:
             --exclude='.git' \
             --exclude='.env' \
             --exclude='.env.local' \
-            --exclude='.chrome-profile' \
-            --exclude='.chrome-pid' \
             --exclude='.DS_Store' \
             .
 

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.browserbase/mcp-server-browserbase",
+  "description": "Browserbase browser automation MCP — hosted remote.",
+  "version": "3.0.0",
+  "remotes": [ { "type": "streamable-http", "url": "https://mcp.browserbase.com/mcp" } ]
+}

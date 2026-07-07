@@ -1,0 +1,20 @@
+{
+  "name": "browse",
+  "description": "Browserbase browse CLI — browser automation for agents",
+  "author": { "name": "Browserbase", "url": "https://browserbase.com" },
+  "homepage": "https://browserbase.com",
+  "repository": "https://github.com/browserbase/stagehand",
+  "license": "MIT",
+  "keywords": ["browser", "automation", "browserbase", "stagehand"],
+  "skills": "./plugins/browse/skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Browse",
+    "shortDescription": "Browser automation for agents",
+    "longDescription": "Automate web browsers with natural language via the Browserbase browse CLI.",
+    "developerName": "Browserbase",
+    "category": "Automation",
+    "websiteURL": "https://browserbase.com",
+    "logo": "./assets/logo.svg"
+  }
+}

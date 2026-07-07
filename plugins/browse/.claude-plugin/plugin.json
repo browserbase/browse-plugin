@@ -1,16 +1,11 @@
 {
   "name": "browse",
-  "displayName": "Browserbase Browse",
   "version": "0.9.1",
   "description": "Automate web browsers with natural language via the Browserbase browse CLI.",
-  "author": {
-    "name": "Browserbase",
-    "email": "support@browserbase.com"
-  },
+  "author": { "name": "Browserbase" },
+  "homepage": "https://browserbase.com",
   "repository": "https://github.com/browserbase/stagehand",
   "license": "MIT",
-  "keywords": ["browser", "automation", "web-scraping", "browserbase", "stagehand"],
-  "logo": "assets/logo.svg",
   "skills": "./skills/",
   "mcpServers": "./.mcp.json"
 }

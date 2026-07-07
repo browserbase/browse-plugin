@@ -1,0 +1,6 @@
+{
+  "name": "browserbase",
+  "version": "3.0.0",
+  "description": "Browserbase browser automation via the hosted Browserbase MCP.",
+  "mcpServers": { "browserbase": { "httpUrl": "https://mcp.browserbase.com/mcp" } }
+}

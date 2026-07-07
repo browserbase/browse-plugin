@@ -1,0 +1,12 @@
+{
+  "name": "browserbase-plugins",
+  "interface": { "displayName": "Browserbase" },
+  "plugins": [
+    {
+      "name": "browse",
+      "source": { "source": "local", "path": "./plugins/browse" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Automation"
+    }
+  ]
+}

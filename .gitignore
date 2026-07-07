@@ -1,25 +1,12 @@
 # Dependencies
 node_modules/
 
-# Build output
-dist/
-
-# Chrome browser profile (copied from user profile)
-.chrome-profile/
-.chrome-pid
-
-# Runtime artifacts
-agent/browser_screenshots/*.png
-agent/downloads/*
-!agent/browser_screenshots/.gitkeep
-!agent/downloads/.gitkeep
-
 # Environment
 .env
 .env.local
 
-# Network debug captures
-network-capture.json
+# Release artifacts
+release.tar.gz
 
 # OS files
 .DS_Store

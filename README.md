@@ -1,56 +1,69 @@
-# Browserbase for Cursor
+# Browserbase browse plugin
 
-Browser automation plugins for the Cursor IDE Marketplace. Control a real Chrome browser through natural language -- navigate, click, type, extract data, and take screenshots.
+A **static, no-codebase marketplace catalog** for the `browse` plugin — Browserbase browser automation for AI agents. There is no application code here: this repo only contains the JSON manifests that let external agent marketplaces (Claude Code, Codex, Cursor, Gemini, Grok, and the generic `.agents` format) install and SHA-pin the `browse` plugin.
 
-## Plugins
+The plugin ships a single skill — the canonical [browse CLI](https://github.com/browserbase/stagehand/tree/main/packages/cli) skill — and points every marketplace at the **hosted Browserbase MCP** at `https://mcp.browserbase.com/mcp`. No local server, no Playwright, no build step.
 
-| Plugin | Description |
-|--------|-------------|
-| [browse](plugins/browse/) | Automate browser interactions via MCP tools. Navigate pages, fill forms, extract data, take screenshots. No API key needed for local mode. |
-| [functions](plugins/functions/) | Deploy serverless browser automation to Browserbase cloud using the `bb` CLI. |
+## What's inside
+
+| Path | Marketplace format |
+|------|--------------------|
+| `.claude-plugin/marketplace.json` | Claude Code marketplace |
+| `.codex-plugin/plugin.json` | Codex plugin |
+| `.cursor-plugin/marketplace.json` | Cursor marketplace |
+| `.agents/plugins/marketplace.json` | Generic `.agents` marketplace |
+| `.grok-plugin/plugin.json` | Grok plugin |
+| `gemini-extension.json` | Gemini CLI extension |
+| `.mcp.json` | Hosted MCP server config (shared) |
+| `server.json` | MCP registry server descriptor |
+
+The `browse` plugin itself lives under `plugins/browse/`:
+
+```text
+plugins/browse/
+├── .claude-plugin/plugin.json
+├── .codex-plugin/plugin.json
+├── .cursor-plugin/plugin.json
+├── .grok-plugin/plugin.json
+├── .mcp.json                  # hosted MCP: https://mcp.browserbase.com/mcp
+├── assets/logo.svg
+└── skills/browse/SKILL.md     # canonical browse CLI skill
+```
+
+Each per-plugin manifest references `./skills/`, `./.mcp.json`, and the logo — all resolved relative to `plugins/browse/`.
+
+## Hosted MCP
+
+Every marketplace format points at the same remote server:
+
+```json
+{ "mcpServers": { "browserbase": { "type": "http", "url": "https://mcp.browserbase.com/mcp" } } }
+```
+
+Installing the plugin in any supported client wires up the Browserbase MCP tools plus the browse skill, which teaches the agent to drive the [`browse` CLI](https://github.com/browserbase/stagehand/tree/main/packages/cli) for local and remote (Browserbase cloud) browser automation.
 
 ## Quick start
 
-### Browse plugin
+- **Claude Code**: add this repo as a plugin marketplace, then install the `browse` plugin.
+- **Cursor**: add the marketplace, then install `browse`.
+- **Codex / Grok**: add the repo as a plugin marketplace and install `browse`.
+- **Gemini CLI**: install this repo as an extension (`gemini-extension.json`).
 
-```bash
-cd plugins/browse
-npm install      # Installs dependencies and auto-builds TypeScript
-```
+Then just ask your agent:
 
-The MCP server starts automatically when the plugin is active in Cursor. Just ask:
-
-- *"Go to Hacker News and get the top 5 stories"*
-- *"Fill out the signup form on example.com"*
-- *"Take a screenshot of localhost:3000"*
+- *"Go to Hacker News and get the top 5 stories."*
+- *"Fill out the signup form on example.com."*
+- *"Take a screenshot of localhost:3000."*
 
 ### Browserbase cloud (optional)
 
-For stealth browsing, proxies, and CAPTCHA solving:
+Remote stealth sessions, proxies, and CAPTCHA solving use a Browserbase API key:
 
 ```bash
 export BROWSERBASE_API_KEY="your-api-key"
-export BROWSERBASE_PROJECT_ID="your-project-id"
 ```
 
-Get credentials at [browserbase.com/settings](https://browserbase.com/settings).
-
-## Architecture
-
-The browse plugin runs an MCP server over stdio that wraps Playwright:
-
-```
-Cursor Model  ──MCP tool call──▶  MCP Server  ──Playwright──▶  Chrome
-     ▲                                │
-     │                                │
-     └──── screenshot file path ──────┘
-     └──── interactive elements ──────┘
-```
-
-- **No API key** needed for local Chrome automation
-- **Headed browser** -- you can watch the automation happen
-- **10 MCP tools**: navigate, click, type, snapshot, screenshot, scroll, evaluate, select, wait, close
-- **Persistent sessions** -- cookies and login state carry over via Chrome profile
+Get a key at [browserbase.com/settings](https://browserbase.com/settings). Local mode uses Chrome/Chromium on your machine and needs no key.
 
 ## Validation
 
@@ -58,22 +71,10 @@ Cursor Model  ──MCP tool call──▶  MCP Server  ──Playwright──�
 node scripts/validate-template.mjs
 ```
 
-## Troubleshooting
-
-### Chrome not found
-
-- **macOS/Windows**: Install from [google.com/chrome](https://www.google.com/chrome/)
-- **Linux**: `sudo apt install google-chrome-stable`
-
-### Profile refresh
-
-```bash
-rm -rf plugins/browse/.chrome-profile
-```
+The validator checks the Cursor marketplace manifest and every referenced path (logo, skills, MCP config, plugin.json name match, skill frontmatter). See [`docs/add-a-plugin.md`](docs/add-a-plugin.md) for the full layout.
 
 ## Resources
 
-- [Playwright Documentation](https://playwright.dev)
+- [browse CLI](https://github.com/browserbase/stagehand/tree/main/packages/cli)
 - [Browserbase](https://browserbase.com)
-- [MCP Specification](https://modelcontextprotocol.io)
-- [Cursor Marketplace](https://cursor.com)
+- [Model Context Protocol](https://modelcontextprotocol.io)

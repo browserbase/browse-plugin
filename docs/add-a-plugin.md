@@ -1,61 +1,76 @@
 # Add a plugin
 
-Add a new plugin under `plugins/` and register it in `.cursor-plugin/marketplace.json`.
+This repo is a **static, multi-marketplace catalog**. A plugin is a folder of manifests and content — no application code, no build step. Every marketplace format points at the hosted Browserbase MCP.
 
-## 1. Create plugin directory
-
-Create a new folder:
+## Layout
 
 ```text
-plugins/my-new-plugin/
+.
+├── .claude-plugin/marketplace.json      # Claude Code marketplace
+├── .codex-plugin/plugin.json            # Codex plugin
+├── .cursor-plugin/marketplace.json      # Cursor marketplace (repo validator reads this)
+├── .agents/plugins/marketplace.json     # Generic .agents marketplace
+├── .grok-plugin/plugin.json             # Grok plugin
+├── gemini-extension.json                # Gemini CLI extension
+├── .mcp.json                            # hosted MCP config (shared)
+├── server.json                          # MCP registry descriptor
+├── assets/logo.svg
+└── plugins/
+    └── <plugin>/
+        ├── .claude-plugin/plugin.json
+        ├── .codex-plugin/plugin.json
+        ├── .cursor-plugin/plugin.json
+        ├── .grok-plugin/plugin.json
+        ├── .mcp.json                    # hosted MCP: https://mcp.browserbase.com/mcp
+        ├── assets/logo.svg
+        └── skills/<skill-name>/SKILL.md # YAML frontmatter: name + description
 ```
 
-Add the required manifest:
+## Hosted MCP
 
-```text
-plugins/my-new-plugin/.cursor-plugin/plugin.json
+Every `.mcp.json` points at the same remote server — no local process is spawned:
+
+```json
+{ "mcpServers": { "browserbase": { "type": "http", "url": "https://mcp.browserbase.com/mcp" } } }
 ```
 
-Example manifest:
+## 1. Create the plugin directory
+
+Create `plugins/<plugin>/` and add a per-marketplace manifest for each format you want to support. Each `plugin.json` uses relative references resolved from the plugin folder:
 
 ```json
 {
-  "name": "my-new-plugin",
-  "displayName": "My New Plugin",
+  "name": "<plugin>",
   "version": "0.1.0",
   "description": "Describe what this plugin does",
-  "author": {
-    "name": "Your Org"
-  },
-  "logo": "assets/logo.svg"
+  "author": { "name": "Your Org" },
+  "logo": "assets/logo.svg",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
 }
 ```
 
-## 2. Add plugin components
+## 2. Add the skill and MCP config
 
-Add only the components you need:
+- `skills/<skill-name>/SKILL.md` — YAML frontmatter must include `name` and `description`.
+- `.mcp.json` — the hosted MCP server config shown above.
+- `assets/logo.svg` — the marketplace display logo.
 
-- `rules/` with `.mdc` files (YAML frontmatter required)
-- `skills/<skill-name>/SKILL.md` (YAML frontmatter required)
-- `agents/*.md` (YAML frontmatter required)
-- `commands/*.(md|mdc|markdown|txt)` (frontmatter recommended)
-- `hooks/hooks.json` and `scripts/*` for automation hooks
-- `mcp.json` for MCP server definitions
-- `assets/logo.svg` for marketplace display
+## 3. Register in the Cursor marketplace manifest
 
-## 3. Register in marketplace manifest
-
-Edit `.cursor-plugin/marketplace.json` and append a new entry:
+Edit `.cursor-plugin/marketplace.json` and append an entry. This is the manifest the repo's own validator reads:
 
 ```json
 {
-  "name": "my-new-plugin",
-  "source": "./plugins/my-new-plugin",
+  "name": "<plugin>",
+  "source": "plugins/<plugin>",
   "description": "Describe your plugin"
 }
 ```
 
-`source` is the relative path from the repository root to the plugin folder.
+`source` is the relative path from the repository root to the plugin folder, and must match the plugin's `.cursor-plugin/plugin.json` `name`.
+
+Add matching entries to the other root marketplace manifests (`.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`) as needed.
 
 ## 4. Validate
 
@@ -67,9 +82,8 @@ Fix all reported errors before committing.
 
 ## 5. Common pitfalls
 
-- Plugin `name` not kebab-case.
-- `source` path in marketplace manifest does not match folder name.
-- Missing `.cursor-plugin/plugin.json` in plugin folder.
-- Missing frontmatter keys (`name`, `description`) in skills, agents, or commands.
-- Rule files missing frontmatter `description`.
-- Broken relative paths for `logo`, `hooks`, or `mcpServers` in manifest files.
+- Plugin `name` not kebab-case, or not matching the `source` folder / entry name.
+- Missing `.cursor-plugin/plugin.json` in the plugin folder.
+- Missing frontmatter keys (`name`, `description`) in `SKILL.md`.
+- Broken relative paths for `logo`, `skills`, or `mcpServers` in a manifest.
+- Pointing `.mcp.json` at a local command instead of the hosted `https://mcp.browserbase.com/mcp` URL.
