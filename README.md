@@ -17,19 +17,18 @@ The plugin ships a single skill — the canonical [browse CLI](https://github.co
 | `.grok-plugin/plugin.json` | Grok plugin |
 | `gemini-extension.json` | Gemini CLI extension (`GEMINI.md` context file, CLI-only) |
 
-The `browse` plugin itself lives under `plugins/browse/`:
+This repo is a single flat plugin — repo root **is** the plugin (matches [link-cli](https://github.com/stripe/link-cli)'s layout, the reference this repo is modeled on):
 
 ```text
-plugins/browse/
-├── .claude-plugin/plugin.json
-├── .codex-plugin/plugin.json
-├── .cursor-plugin/plugin.json
-├── .grok-plugin/plugin.json
-├── assets/logo.svg
-└── skills/browse/SKILL.md     # canonical browse CLI skill
+.claude-plugin/plugin.json
+.codex-plugin/plugin.json
+.cursor-plugin/plugin.json
+.grok-plugin/plugin.json
+assets/logo.svg
+skills/browse/SKILL.md     # canonical browse CLI skill
 ```
 
-Each per-plugin manifest references `./skills/` and the logo — all resolved relative to `plugins/browse/`.
+Each per-format `plugin.json` references `./skills/` and the logo relative to repo root, and each root marketplace file's `source` points at `.` — no nested `plugins/<name>/` indirection. (An earlier revision nested everything under `plugins/browse/` from when this repo held a second `functions` plugin; flattened back to match the single-plugin reality and fix third-party tools — e.g. Hermes Agent's skill "tap" — that scan for `skills/` at repo root by convention.)
 
 Installing the plugin in any supported client wires up the browse skill, which teaches the agent to drive the [`browse` CLI](https://github.com/browserbase/stagehand/tree/main/packages/cli) for local and remote (Browserbase cloud) browser automation.
 

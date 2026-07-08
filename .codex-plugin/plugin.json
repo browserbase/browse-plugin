@@ -6,7 +6,7 @@
   "repository": "https://github.com/browserbase/stagehand",
   "license": "MIT",
   "keywords": ["browser", "automation", "browserbase", "stagehand"],
-  "skills": "./plugins/browse/skills/",
+  "skills": "./skills/",
   "interface": {
     "displayName": "Browse",
     "shortDescription": "Browser automation for agents",

@@ -4,7 +4,7 @@
   "plugins": [
     {
       "name": "browse",
-      "source": { "source": "local", "path": "./plugins/browse" },
+      "source": { "source": "local", "path": "." },
       "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
       "category": "Automation"
     }
