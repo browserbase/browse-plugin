@@ -1,6 +1,6 @@
 # Add a plugin
 
-This repo is a **static, multi-marketplace catalog**. A plugin is a folder of manifests and content — no application code, no build step. Every marketplace format points at the hosted Browserbase MCP.
+This repo is a **static, multi-marketplace catalog**. A plugin is a folder of manifests and content — no application code, no build step. Plugins are CLI-only (a `SKILL.md` that shells out to a real CLI) — no MCP config, so there's no API key to embed in this public, git-pinned repo. See the README's "Why CLI-only, not MCP" note for the reasoning.
 
 ## Layout
 
@@ -12,8 +12,7 @@ This repo is a **static, multi-marketplace catalog**. A plugin is a folder of ma
 ├── .agents/plugins/marketplace.json     # Generic .agents marketplace
 ├── .grok-plugin/plugin.json             # Grok plugin
 ├── gemini-extension.json                # Gemini CLI extension
-├── .mcp.json                            # hosted MCP config (shared)
-├── server.json                          # MCP registry descriptor
+├── GEMINI.md                            # Gemini context file (CLI-only, no mcpServers)
 ├── assets/logo.svg
 └── plugins/
     └── <plugin>/
@@ -21,17 +20,8 @@ This repo is a **static, multi-marketplace catalog**. A plugin is a folder of ma
         ├── .codex-plugin/plugin.json
         ├── .cursor-plugin/plugin.json
         ├── .grok-plugin/plugin.json
-        ├── .mcp.json                    # hosted MCP: https://mcp.browserbase.com/mcp
         ├── assets/logo.svg
         └── skills/<skill-name>/SKILL.md # YAML frontmatter: name + description
-```
-
-## Hosted MCP
-
-Every `.mcp.json` points at the same remote server — no local process is spawned:
-
-```json
-{ "mcpServers": { "browserbase": { "type": "http", "url": "https://mcp.browserbase.com/mcp" } } }
 ```
 
 ## 1. Create the plugin directory
@@ -45,15 +35,13 @@ Create `plugins/<plugin>/` and add a per-marketplace manifest for each format yo
   "description": "Describe what this plugin does",
   "author": { "name": "Your Org" },
   "logo": "assets/logo.svg",
-  "skills": "./skills/",
-  "mcpServers": "./.mcp.json"
+  "skills": "./skills/"
 }
 ```
 
-## 2. Add the skill and MCP config
+## 2. Add the skill
 
-- `skills/<skill-name>/SKILL.md` — YAML frontmatter must include `name` and `description`.
-- `.mcp.json` — the hosted MCP server config shown above.
+- `skills/<skill-name>/SKILL.md` — YAML frontmatter must include `name` and `description`; `allowed-tools: Bash` and instructions for shelling out to the plugin's CLI.
 - `assets/logo.svg` — the marketplace display logo.
 
 ## 3. Register in the Cursor marketplace manifest
@@ -85,5 +73,4 @@ Fix all reported errors before committing.
 - Plugin `name` not kebab-case, or not matching the `source` folder / entry name.
 - Missing `.cursor-plugin/plugin.json` in the plugin folder.
 - Missing frontmatter keys (`name`, `description`) in `SKILL.md`.
-- Broken relative paths for `logo`, `skills`, or `mcpServers` in a manifest.
-- Pointing `.mcp.json` at a local command instead of the hosted `https://mcp.browserbase.com/mcp` URL.
+- Broken relative paths for `logo` or `skills` in a manifest.

@@ -11,6 +11,5 @@
   "license": "MIT",
   "keywords": ["browser", "automation", "web-scraping", "browserbase", "stagehand"],
   "logo": "assets/logo.svg",
-  "skills": "./skills/",
-  "mcpServers": "./.mcp.json"
+  "skills": "./skills/"
 }

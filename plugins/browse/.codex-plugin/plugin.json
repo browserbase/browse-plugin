@@ -7,7 +7,6 @@
   "license": "MIT",
   "keywords": ["browser", "automation", "browserbase", "stagehand"],
   "skills": "./skills/",
-  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Browse",
     "shortDescription": "Browser automation for agents",

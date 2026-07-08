@@ -6,6 +6,5 @@
   "homepage": "https://browserbase.com",
   "repository": "https://github.com/browserbase/stagehand",
   "license": "MIT",
-  "skills": "./skills/",
-  "mcpServers": "./.mcp.json"
+  "skills": "./skills/"
 }
