@@ -20,9 +20,9 @@ jobs:
           node-version: 20
 
       # ---------- Validate ----------
-      # This repo is a static, no-codebase marketplace catalog: JSON manifests,
-      # a hosted MCP config, and the browse skill. There is nothing to install
-      # or build, so the release job only validates and packages the manifests.
+      # This repo is a static, no-codebase marketplace catalog: JSON manifests
+      # and the browse skill. There is nothing to install or build, so the
+      # release job only validates and packages the manifests.
       - name: Validate plugin structure
         run: node scripts/validate-template.mjs
 
