@@ -363,7 +363,12 @@ async function main() {
 
 async function validateGeminiSync() {
   const geminiPath = path.join(repoRoot, GEMINI_PATH);
+  const geminiExtensionPath = path.join(repoRoot, "gemini-extension.json");
+
   if (!(await pathExists(geminiPath))) {
+    if (await pathExists(geminiExtensionPath)) {
+      addError(`${GEMINI_PATH} is missing, but gemini-extension.json requires it as the extension's context file.`);
+    }
     return;
   }
 
