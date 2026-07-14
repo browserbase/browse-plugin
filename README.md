@@ -1,10 +1,8 @@
-# Browserbase browse plugin
+# browse plugin marketplace
 
-A **static, no-codebase marketplace catalog** for the `browse` plugin, Browserbase browser automation for AI agents. There is no application code here: this repo only contains the JSON manifests that let external agent marketplaces (Claude Code, Codex, Cursor, Gemini, Grok, and the generic `.agents` format) install and SHA-pin the `browse` plugin.
+Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI as a native plugin in Claude Code, Cursor, Codex, Grok, and Gemini CLI.
 
-The plugin ships a single skill, the canonical [browse CLI](https://github.com/browserbase/stagehand/tree/main/packages/cli) skill, that teaches the agent to drive `browse` via the shell. No local server, no Playwright, no build step, no MCP config, no API key required for local browsing.
-
-**Why CLI-only, not MCP:** this catalog targets agents with shell access (Claude Code, Codex, Cursor, Gemini CLI, Grok), so a bundled MCP server adds no reach for this audience while requiring a Browserbase API key that a static, git-pinned public manifest can't safely embed. The hosted MCP remains the right integration for shell-less surfaces (ChatGPT, claude.ai). That's tracked separately, gated on OAuth support for those directories.
+This repo has no application code. It's a set of static JSON manifests that let each agent marketplace install and SHA-pin the `browse` plugin, plus the skill that teaches the agent to drive `browse` from the shell.
 
 ## What's inside
 
@@ -15,22 +13,9 @@ The plugin ships a single skill, the canonical [browse CLI](https://github.com/b
 | `.cursor-plugin/marketplace.json` | Cursor marketplace |
 | `.agents/plugins/marketplace.json` | Generic `.agents` marketplace |
 | `.grok-plugin/plugin.json` | Grok plugin |
-| `gemini-extension.json` | Gemini CLI extension (`GEMINI.md` context file, CLI-only) |
+| `gemini-extension.json` | Gemini CLI extension (`GEMINI.md` context file) |
 
-This repo is a single flat plugin: repo root **is** the plugin.
-
-```text
-.claude-plugin/plugin.json
-.codex-plugin/plugin.json
-.cursor-plugin/plugin.json
-.grok-plugin/plugin.json
-assets/logo.svg
-skills/browse/SKILL.md     # canonical browse CLI skill
-```
-
-Each per-format `plugin.json` references `./skills/` and the logo relative to repo root, and each root marketplace file's `source` points at `.`, so there's no nested `plugins/<name>/` indirection. A nested `plugins/<name>/` layout breaks third-party tools (e.g. Hermes Agent's skill "tap") that scan for `skills/` at repo root by convention, so this repo stays flat.
-
-Installing the plugin in any supported client wires up the browse skill, which teaches the agent to drive the [`browse` CLI](https://github.com/browserbase/stagehand/tree/main/packages/cli) for local and remote (Browserbase cloud) browser automation.
+See [`docs/add-a-plugin.md`](docs/add-a-plugin.md) for the full repo layout and how to update the plugin.
 
 ## Quick start
 
@@ -45,6 +30,8 @@ Then just ask your agent:
 - *"Fill out the signup form on example.com."*
 - *"Take a screenshot of localhost:3000."*
 
+No local server, no build step, no API key required for local browsing.
+
 ### Browserbase cloud (optional)
 
 Remote stealth sessions, proxies, and CAPTCHA solving use a Browserbase API key:
@@ -55,16 +42,8 @@ export BROWSERBASE_API_KEY="your-api-key"
 
 Get a key at [browserbase.com/settings](https://browserbase.com/settings). Local mode uses Chrome/Chromium on your machine and needs no key.
 
-## Validation
-
-```bash
-node scripts/validate-template.mjs
-```
-
-The validator checks the Cursor marketplace manifest and every referenced path (logo, skills, plugin.json name match, skill frontmatter). See [`docs/add-a-plugin.md`](docs/add-a-plugin.md) for the full layout.
-
 ## Resources
 
 - [browse CLI](https://github.com/browserbase/stagehand/tree/main/packages/cli)
+- [Adding or updating the plugin](docs/add-a-plugin.md)
 - [Browserbase](https://browserbase.com)
-- [Model Context Protocol](https://modelcontextprotocol.io)
