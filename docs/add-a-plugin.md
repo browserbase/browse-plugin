@@ -1,8 +1,8 @@
 # Repo layout
 
-This repo is a **static, single-plugin catalog** — repo root **is** the `browse` plugin, one plugin per repo (matches [link-cli](https://github.com/stripe/link-cli), the reference this repo is modeled on). No application code, no build step. The plugin is CLI-only (a `SKILL.md` that shells out to a real CLI) — no MCP config, so there's no API key to embed in this public, git-pinned repo. See the README's "Why CLI-only, not MCP" note for the reasoning.
+This repo is a **static, single-plugin catalog** — repo root **is** the `browse` plugin, one plugin per repo, similar in shape to [stripe/link-cli](https://github.com/stripe/link-cli). No application code, no build step. The plugin is CLI-only (a `SKILL.md` that shells out to a real CLI) — no MCP config, so there's no API key to embed in this public, git-pinned repo. See the README's "Why CLI-only, not MCP" note for the reasoning.
 
-If Browserbase ever needs a second distinct plugin, per the settled positioning ("external directories list a single `browse` plugin"), that belongs in its own dedicated repo — not nested inside this one. An earlier revision nested content under `plugins/browse/` for exactly that multi-plugin case; it was flattened back once this repo committed to being single-plugin, since the nesting had no remaining beneficiary and broke third-party tools (e.g. Hermes Agent's skill "tap") that scan for `skills/` at repo root by convention.
+If Browserbase ever needs a second distinct plugin, it belongs in its own dedicated repo — not nested inside this one. A nested `plugins/<name>/` layout breaks third-party tools (e.g. Hermes Agent's skill "tap") that scan for `skills/` at repo root by convention.
 
 ## Layout
 
@@ -25,7 +25,7 @@ Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to 
 
 ## Updating the skill
 
-- `skills/browse/SKILL.md` — YAML frontmatter must include `name` and `description`; `allowed-tools: Bash` and instructions for shelling out to `browse`. This is synced from the canonical copy in `stagehand/packages/cli/skills/browse/SKILL.md` — edit there, not here, once the copy-on-release sync exists (not yet built as of 2026-07-07; currently manual).
+- `skills/browse/SKILL.md` — YAML frontmatter must include `name` and `description`; `allowed-tools: Bash` and instructions for shelling out to `browse`. This is a manual copy of the canonical `stagehand/packages/cli/skills/browse/SKILL.md` — edit there and re-copy here. Automated copy-on-release sync is tracked in [stagehand#2330](https://github.com/browserbase/stagehand/pull/2330).
 - `assets/logo.svg` — the marketplace display logo.
 
 ## Validate
