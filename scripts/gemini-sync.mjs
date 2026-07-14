@@ -4,7 +4,7 @@ import path from "node:path";
 export const SKILL_PATH = path.join("skills", "browse", "SKILL.md");
 export const GEMINI_PATH = "GEMINI.md";
 
-function normalizeNewlines(content) {
+export function normalizeNewlines(content) {
   return content.replace(/\r\n/g, "\n");
 }
 

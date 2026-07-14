@@ -375,7 +375,7 @@ async function validateGeminiSync() {
     return;
   }
 
-  const actual = await fs.readFile(geminiPath, "utf8");
+  const actual = normalizeNewlines(await fs.readFile(geminiPath, "utf8"));
   if (actual !== expected) {
     addError(`${GEMINI_PATH} is out of sync with skills/browse/SKILL.md. Run \`node scripts/sync-gemini.mjs\` to fix.`);
   }
