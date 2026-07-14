@@ -1,1 +1,1 @@
-{ "name": "browse", "version": "0.9.1", "description": "Browser automation for AI agents: navigate, extract, screenshot, and interact with real web pages via a single CLI.", "skills": "./skills/", "logo": "assets/logo.svg" }
+{ "name": "browse", "version": "0.9.5", "description": "Browser automation for AI agents: navigate, extract, screenshot, and interact with real web pages via a single CLI.", "skills": "./skills/", "logo": "assets/logo.svg" }

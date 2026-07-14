@@ -23,7 +23,9 @@ If Browserbase ever needs a second distinct plugin, it belongs in its own dedica
 └── scripts/
     ├── validate-template.mjs            # run by CI and locally, see "Validate" below
     ├── gemini-sync.mjs                  # shared logic: derive GEMINI.md's expected content from SKILL.md
-    └── sync-gemini.mjs                  # regenerates GEMINI.md; --check fails without writing
+    ├── sync-gemini.mjs                  # regenerates GEMINI.md; --check fails without writing
+    ├── version-sync.mjs                 # shared logic: reads the version every manifest must match
+    └── sync-version.mjs                 # propagates plugin.json's version to the others; --check fails without writing
 ```
 
 Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to repo root (`./skills/`, `assets/logo.svg`), and every root marketplace file's `"source"`/`"path"` is `"."`. The root `plugin.json` is a separate, vendor-neutral manifest ([Open Plugin spec](https://github.com/vercel-labs/open-plugin-spec) v1.0.0); it doesn't replace or override any per-client manifest and only needs updating when the plugin's name, version, or metadata changes.
@@ -33,6 +35,16 @@ Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to 
 - `skills/browse/SKILL.md` — YAML frontmatter must include `name` and `description`; `allowed-tools: Bash` and instructions for shelling out to `browse`. This is a manual copy of the canonical `stagehand/packages/cli/skills/browse/SKILL.md` — edit there and re-copy here. Automated copy-on-release sync is tracked in [stagehand#2330](https://github.com/browserbase/stagehand/pull/2330).
 - `GEMINI.md` — Gemini's extension format has no way to reference an external skill file, so it carries the same instructions as `SKILL.md`'s body, verbatim. After editing `skills/browse/SKILL.md`, run `node scripts/sync-gemini.mjs` to regenerate `GEMINI.md`. CI fails if the two drift out of sync.
 - `assets/logo.svg` — the marketplace display logo.
+
+## Bumping the version
+
+`plugin.json`'s `version` tracks the `browse` CLI's own npm version, since the plugin has no independent feature surface beyond the CLI it wraps. It's the single source of truth: `.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `.grok-plugin/plugin.json`, and `gemini-extension.json` must all match it exactly. Bump `plugin.json`'s `version` (typically alongside a `SKILL.md` refresh, for the same release), then run:
+
+```bash
+node scripts/sync-version.mjs
+```
+
+CI fails if any of them drift out of sync. This repo's own git tags (`v0.1.0`, `v0.2.0`, ...) are a separate axis — they version this repo's own packaging/manifest format, not the CLI.
 
 ## Validate
 
@@ -50,3 +62,4 @@ Fix all reported errors before committing. This also runs in CI on every pull re
 - Broken relative paths for `logo` or `skills` in a manifest.
 - A marketplace `source`/`path` pointing at anything other than `"."` — this repo has no nested plugin folder anymore.
 - Editing `skills/browse/SKILL.md` without running `node scripts/sync-gemini.mjs` afterward — CI fails if `GEMINI.md` drifts out of sync.
+- Bumping `plugin.json`'s `version` without running `node scripts/sync-version.mjs` afterward — CI fails if the other manifests drift out of sync.

@@ -4,6 +4,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { computeExpectedGemini, GEMINI_PATH } from "./gemini-sync.mjs";
+import { getSourceVersion, replaceVersion, VERSION_TARGET_PATHS, SOURCE_VERSION_PATH } from "./version-sync.mjs";
 
 const repoRoot = process.cwd();
 const errors = [];
@@ -357,8 +358,41 @@ async function main() {
   }
 
   await validateGeminiSync();
+  await validateVersionSync();
 
   summarizeAndExit();
+}
+
+async function validateVersionSync() {
+  let sourceVersion;
+  try {
+    sourceVersion = await getSourceVersion(repoRoot);
+  } catch (error) {
+    addError(`Could not read version from ${SOURCE_VERSION_PATH}: ${error.message}`);
+    return;
+  }
+
+  for (const relPath of VERSION_TARGET_PATHS) {
+    const filePath = path.join(repoRoot, relPath);
+    if (!(await pathExists(filePath))) {
+      continue;
+    }
+
+    const raw = await fs.readFile(filePath, "utf8");
+    let previousVersion;
+    try {
+      ({ previousVersion } = replaceVersion(raw, sourceVersion));
+    } catch (error) {
+      addError(`${relPath}: ${error.message}`);
+      continue;
+    }
+
+    if (previousVersion !== sourceVersion) {
+      addError(
+        `${relPath} version "${previousVersion}" does not match ${SOURCE_VERSION_PATH}'s version "${sourceVersion}". Run \`node scripts/sync-version.mjs\` to fix.`
+      );
+    }
+  }
 }
 
 async function validateGeminiSync() {
