@@ -47,11 +47,15 @@ browse open https://example.com --cdp ws://127.0.0.1:9222/devtools/browser/<id>
 
 Use local mode for development, localhost, trusted sites, and fast iteration. Use `--auto-connect` only when the user explicitly wants to attach to an already-running debuggable Chrome session with existing cookies or login state; use `--local` when no debuggable Chrome is available. Use remote mode when Browserbase credentials are available and the site needs hosted browser infrastructure, Verified browser mode, CAPTCHA solving, proxies, or session persistence.
 
+`--local` requires Chrome or Chromium already installed on the machine. In containers, CI, and sandboxes with no browser installed, use `--remote` instead of `--local`. If `--local` fails with "No Chrome or Chromium found" and `BROWSERBASE_API_KEY` is set, switch to `--remote` — do not retry `--local`.
+
 For a Verified and/or proxied remote session, add `--verified` and/or `--proxies` to `--remote` — a single command that keeps the Browserbase session identity, so `browse status` and `browse doctor` report the session ID and live-view URL. `--verified` requires a Browserbase Scale plan. These flags only apply to `--remote` and are sticky for the session's lifetime, like `--headed`. Reach for `browse cloud sessions create` + `--cdp` only when you need session options `open` doesn't expose (region, keep-alive, contexts).
 
 Choose headed/headless and local/remote mode when starting a session. A running session keeps its mode: passing a conflicting flag such as `--headed` to an already-running headless session fails until you run `browse stop --session <name>` or target a different session.
 
 Use named sessions for any non-trivial work, especially when multiple agents or parallel tasks may run at once. Every browser command accepts `--session <name>` (or `-s <name>`); the `BROWSE_SESSION` env var sets the default, and commands without either share the `default` session.
+
+If `BROWSE_SESSION` is already set in the environment, every command already targets that session — do not pass `--session` or invent a new name. An explicit `--session <name>` always overrides `BROWSE_SESSION` for that command, so only pass it to deliberately target a different session.
 
 ```bash
 browse open https://example.com --session research --local
@@ -204,10 +208,12 @@ browse cloud sessions debug <session-id>
 browse cloud sessions logs <session-id>
 browse cloud sessions downloads get <session-id>
 browse cloud sessions uploads create <session-id> ./file.pdf
-browse cloud contexts create
-browse cloud contexts get <context-id>
-browse cloud contexts update <context-id>
-browse cloud contexts delete <context-id>
+browse cloud contexts create --name github
+browse cloud contexts add github <context-id>
+browse cloud contexts list
+browse cloud contexts get <context-id|name>
+browse cloud contexts update <context-id|name>
+browse cloud contexts delete <context-id|name>
 browse cloud extensions upload ./extension.zip
 browse cloud extensions get <extension-id>
 browse cloud extensions delete <extension-id>
@@ -219,6 +225,17 @@ For remote sessions with context persistence:
 
 ```bash
 browse cloud sessions create --context-id <context-id> --persist
+```
+
+Contexts persist cookies and local storage (logins) across sessions. Name a
+context once with `--name` to save a local alias, then reuse the name anywhere a
+context ID is accepted instead of memorizing the ID:
+
+```bash
+browse cloud contexts create --name github          # saves github -> ctx_...
+browse cloud contexts add github <context-id>        # name a context you already have
+browse cloud sessions create --context-id github --persist
+browse cloud contexts list                          # show saved names
 ```
 
 Use `--verified` when the task needs Browserbase Verified browser mode. To drive a Verified/proxied session directly, prefer `browse open <url> --remote --verified --proxies` over create-then-attach — it keeps the session identity so `browse status`/`browse doctor` can report it. Use `browse cloud sessions create` for session options the driver flags don't cover (region, keep-alive, contexts, full `--stdin` body).
