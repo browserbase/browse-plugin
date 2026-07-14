@@ -26,6 +26,7 @@ Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to 
 ## Updating the skill
 
 - `skills/browse/SKILL.md` — YAML frontmatter must include `name` and `description`; `allowed-tools: Bash` and instructions for shelling out to `browse`. This is a manual copy of the canonical `stagehand/packages/cli/skills/browse/SKILL.md` — edit there and re-copy here. Automated copy-on-release sync is tracked in [stagehand#2330](https://github.com/browserbase/stagehand/pull/2330).
+- `GEMINI.md` — Gemini's extension format has no way to reference an external skill file, so it carries the same instructions as `SKILL.md`'s body, verbatim. After editing `skills/browse/SKILL.md`, run `node scripts/sync-gemini.mjs` to regenerate `GEMINI.md`. CI fails if the two drift out of sync.
 - `assets/logo.svg` — the marketplace display logo.
 
 ## Validate
@@ -34,7 +35,7 @@ Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to 
 node scripts/validate-template.mjs
 ```
 
-Fix all reported errors before committing.
+Fix all reported errors before committing. This also runs in CI on every pull request and on pushes to `main` (`.github/workflows/validate.yml`).
 
 ## Common pitfalls
 

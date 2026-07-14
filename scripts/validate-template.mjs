@@ -3,6 +3,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { computeExpectedGemini, GEMINI_PATH } from "./gemini-sync.mjs";
 
 const repoRoot = process.cwd();
 const errors = [];
@@ -355,7 +356,29 @@ async function main() {
     }
   }
 
+  await validateGeminiSync();
+
   summarizeAndExit();
+}
+
+async function validateGeminiSync() {
+  const geminiPath = path.join(repoRoot, GEMINI_PATH);
+  if (!(await pathExists(geminiPath))) {
+    return;
+  }
+
+  let expected;
+  try {
+    expected = await computeExpectedGemini(repoRoot);
+  } catch (error) {
+    addError(`Could not compute expected ${GEMINI_PATH} from skills/browse/SKILL.md: ${error.message}`);
+    return;
+  }
+
+  const actual = await fs.readFile(geminiPath, "utf8");
+  if (actual !== expected) {
+    addError(`${GEMINI_PATH} is out of sync with skills/browse/SKILL.md. Run \`node scripts/sync-gemini.mjs\` to fix.`);
+  }
 }
 
 function summarizeAndExit() {
