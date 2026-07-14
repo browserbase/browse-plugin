@@ -1,8 +1,8 @@
 {
   "name": "browse",
-  "displayName": "Browserbase Browse",
+  "displayName": "Browse",
   "version": "0.9.1",
-  "description": "Automate web browsers with natural language via the Browserbase browse CLI.",
+  "description": "Automate web browsers with natural language via the Browse CLI.",
   "author": {
     "name": "Browserbase",
     "email": "support@browserbase.com"
