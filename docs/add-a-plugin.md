@@ -1,6 +1,6 @@
 # Repo layout
 
-This repo is a **static, single-plugin catalog** — repo root **is** the `browse` plugin, one plugin per repo, similar in shape to [stripe/link-cli](https://github.com/stripe/link-cli). No application code, no build step. The plugin is CLI-only (a `SKILL.md` that shells out to a real CLI) — no MCP config, so there's no API key to embed in this public, git-pinned repo. See the README's "Why CLI-only, not MCP" note for the reasoning.
+This repo is a **static, single-plugin catalog** — repo root **is** the `browse` plugin, one plugin per repo. No application code, no build step. The plugin is CLI-only (a `SKILL.md` that shells out to a real CLI) — no MCP config, so there's no API key to embed in this public, git-pinned repo. See the README's "Why CLI-only, not MCP" note for the reasoning.
 
 If Browserbase ever needs a second distinct plugin, it belongs in its own dedicated repo — not nested inside this one. A nested `plugins/<name>/` layout breaks third-party tools (e.g. Hermes Agent's skill "tap") that scan for `skills/` at repo root by convention.
 

@@ -17,7 +17,7 @@ The plugin ships a single skill — the canonical [browse CLI](https://github.co
 | `.grok-plugin/plugin.json` | Grok plugin |
 | `gemini-extension.json` | Gemini CLI extension (`GEMINI.md` context file, CLI-only) |
 
-This repo is a single flat plugin — repo root **is** the plugin, similar in shape to [stripe/link-cli](https://github.com/stripe/link-cli):
+This repo is a single flat plugin — repo root **is** the plugin:
 
 ```text
 .claude-plugin/plugin.json
