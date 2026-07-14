@@ -1,5 +1,5 @@
 {
   "name": "browserbase",
   "version": "0.9.1",
-  "description": "Automate web browsers with natural language via the Browse CLI."
+  "description": "Browser automation for AI agents: navigate, extract, screenshot, and interact with real web pages via a single CLI."
 }

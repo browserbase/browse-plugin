@@ -6,7 +6,7 @@
     {
       "name": "browse",
       "source": ".",
-      "description": "Automate web browsers with natural language via the Browse CLI.",
+      "description": "Browser automation for AI agents: navigate, extract, screenshot, and interact with real web pages via a single CLI.",
       "author": { "name": "Browserbase" },
       "homepage": "https://browserbase.com",
       "repository": "https://github.com/browserbase/stagehand",

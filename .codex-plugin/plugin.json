@@ -10,7 +10,7 @@
   "interface": {
     "displayName": "Browse",
     "shortDescription": "Browser automation for agents",
-    "longDescription": "Automate web browsers with natural language via the Browse CLI.",
+    "longDescription": "Browser automation for AI agents: navigate, extract, screenshot, and interact with real web pages via a single CLI.",
     "developerName": "Browserbase",
     "category": "Automation",
     "websiteURL": "https://browserbase.com",
