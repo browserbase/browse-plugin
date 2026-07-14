@@ -17,11 +17,16 @@ If Browserbase ever needs a second distinct plugin, it belongs in its own dedica
 ├── .grok-plugin/plugin.json             # Grok plugin
 ├── gemini-extension.json                # Gemini CLI extension
 ├── GEMINI.md                            # Gemini context file (CLI-only, no mcpServers)
+├── plugin.json                          # Open Plugin spec manifest (vendor-neutral, e.g. `npx plugins add`)
 ├── assets/logo.svg
-└── skills/browse/SKILL.md               # YAML frontmatter: name + description
+├── skills/browse/SKILL.md               # YAML frontmatter: name + description
+└── scripts/
+    ├── validate-template.mjs            # run by CI and locally, see "Validate" below
+    ├── gemini-sync.mjs                  # shared logic: derive GEMINI.md's expected content from SKILL.md
+    └── sync-gemini.mjs                  # regenerates GEMINI.md; --check fails without writing
 ```
 
-Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to repo root (`./skills/`, `assets/logo.svg`), and every root marketplace file's `"source"`/`"path"` is `"."`.
+Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to repo root (`./skills/`, `assets/logo.svg`), and every root marketplace file's `"source"`/`"path"` is `"."`. The root `plugin.json` is a separate, vendor-neutral manifest ([Open Plugin spec](https://github.com/vercel-labs/open-plugin-spec) v1.0.0); it doesn't replace or override any per-client manifest and only needs updating when the plugin's name, version, or metadata changes.
 
 ## Updating the skill
 
@@ -44,3 +49,4 @@ Fix all reported errors before committing. This also runs in CI on every pull re
 - Missing frontmatter keys (`name`, `description`) in `SKILL.md`.
 - Broken relative paths for `logo` or `skills` in a manifest.
 - A marketplace `source`/`path` pointing at anything other than `"."` — this repo has no nested plugin folder anymore.
+- Editing `skills/browse/SKILL.md` without running `node scripts/sync-gemini.mjs` afterward — CI fails if `GEMINI.md` drifts out of sync.
