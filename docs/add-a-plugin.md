@@ -38,13 +38,15 @@ Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to 
 
 ## Bumping the version
 
-`plugin.json`'s `version` tracks the `browse` CLI's own npm version, since the plugin has no independent feature surface beyond the CLI it wraps. It's the single source of truth: `.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `.grok-plugin/plugin.json`, and `gemini-extension.json` must all match it exactly. Bump `plugin.json`'s `version` (typically alongside a `SKILL.md` refresh, for the same release), then run:
+`plugin.json`'s `version` tracks this repo's own release tags (`v0.1.0`, `v0.2.0`, ...), the same as the git tags already used for GitHub Releases. The published Cursor marketplace listing is built by `release.yml`, which only runs on a tag push — merging to `main` alone doesn't update it. `plugin.json` is the single source of truth for the other four: `.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `.grok-plugin/plugin.json`, and `gemini-extension.json` must all match it exactly.
+
+To cut a release, bump `plugin.json`'s `version` and run:
 
 ```bash
 node scripts/sync-version.mjs
 ```
 
-CI fails if any of them drift out of sync. This repo's own git tags (`v0.1.0`, `v0.2.0`, ...) are a separate axis — they version this repo's own packaging/manifest format, not the CLI.
+CI fails if any of the five drift out of sync. Once that PR merges to `main`, a second CI job (`tag-release`, in `.github/workflows/validate.yml`) detects the version change and pushes the matching `vX.Y.Z` tag automatically — no one runs `git tag` by hand. That tag push is what triggers `release.yml` to actually validate, package, and publish the release. If `plugin.json`'s version didn't change on a given push to `main`, or a tag for that version already exists, `tag-release` is a no-op.
 
 ## Validate
 
