@@ -8,7 +8,7 @@
   "keywords": ["browser", "automation", "browserbase", "stagehand"],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Browse",
+    "displayName": "Browserbase",
     "shortDescription": "Browser automation for agents",
     "longDescription": "Browser automation for AI agents: navigate, extract, screenshot, and interact with real web pages via a single CLI.",
     "developerName": "Browserbase",

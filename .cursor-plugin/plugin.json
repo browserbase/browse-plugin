@@ -1,6 +1,6 @@
 {
   "name": "browse",
-  "displayName": "Browse",
+  "displayName": "Browserbase",
   "version": "0.3.0",
   "description": "Browser automation for AI agents: navigate, extract, screenshot, and interact with real web pages via a single CLI.",
   "author": {
