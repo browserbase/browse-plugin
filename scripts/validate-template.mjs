@@ -375,6 +375,7 @@ async function validateVersionSync() {
   for (const relPath of VERSION_TARGET_PATHS) {
     const filePath = path.join(repoRoot, relPath);
     if (!(await pathExists(filePath))) {
+      addError(`${relPath} is missing; it must exist and match ${SOURCE_VERSION_PATH}'s version.`);
       continue;
     }
 
