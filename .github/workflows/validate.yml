@@ -20,10 +20,13 @@ jobs:
       - name: Validate plugin structure
         run: node scripts/validate-template.mjs
 
-  # Tags plugin.json's version the moment a version-bump PR merges to main.
-  # Never pushes to main itself (only a new tag ref), so this works
-  # regardless of branch protection on main. The pushed tag is what
-  # triggers release.yml to actually build and publish the release.
+  # Tags plugin.json's current committed version if no matching tag exists
+  # yet. Checked against tag existence, not a commit-to-commit diff, so a
+  # version bump split across multiple commits (e.g. an unsquashed merge)
+  # still gets tagged the moment the state lands on main. Never pushes to
+  # main itself (only a new tag ref), so this works regardless of branch
+  # protection on main. The pushed tag is what triggers release.yml to
+  # actually build and publish the release.
   tag-release:
     needs: validate
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -36,22 +39,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Tag if plugin.json's version changed
+      - name: Tag plugin.json's version if untagged
         run: |
-          if git diff --quiet ${{ github.sha }}^ ${{ github.sha }} -- plugin.json; then
-            echo "plugin.json did not change on this push."
-            exit 0
-          fi
+          VERSION=$(node -pe "JSON.parse(require('fs').readFileSync('plugin.json', 'utf8')).version")
+          TAG="v${VERSION}"
 
-          OLD_VERSION=$(git show ${{ github.sha }}^:plugin.json | node -pe "JSON.parse(require('fs').readFileSync(0, 'utf8')).version" 2>/dev/null || echo "")
-          NEW_VERSION=$(git show ${{ github.sha }}:plugin.json | node -pe "JSON.parse(require('fs').readFileSync(0, 'utf8')).version")
-
-          if [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
-            echo "plugin.json's version did not change on this push."
-            exit 0
-          fi
-
-          TAG="v${NEW_VERSION}"
           if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
             echo "Tag ${TAG} already exists."
             exit 0
