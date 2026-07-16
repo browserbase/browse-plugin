@@ -1,79 +1,49 @@
-# Browserbase for Cursor
+# browse plugin marketplace
 
-Browser automation plugins for the Cursor IDE Marketplace. Control a real Chrome browser through natural language -- navigate, click, type, extract data, and take screenshots.
+Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI as a native plugin in Claude Code, Cursor, Codex, Grok, and Gemini CLI.
 
-## Plugins
+This repo has no application code. It's a set of static JSON manifests that let each agent marketplace install and SHA-pin the `browse` plugin, plus the skill that teaches the agent to drive `browse` from the shell.
 
-| Plugin | Description |
-|--------|-------------|
-| [browse](plugins/browse/) | Automate browser interactions via MCP tools. Navigate pages, fill forms, extract data, take screenshots. No API key needed for local mode. |
-| [functions](plugins/functions/) | Deploy serverless browser automation to Browserbase cloud using the `bb` CLI. |
+## What's inside
+
+| Path | Marketplace format |
+|------|--------------------|
+| `.claude-plugin/marketplace.json` | Claude Code marketplace |
+| `.codex-plugin/plugin.json` | Codex plugin |
+| `.cursor-plugin/marketplace.json` | Cursor marketplace |
+| `.agents/plugins/marketplace.json` | Generic `.agents` marketplace |
+| `.grok-plugin/plugin.json` | Grok plugin |
+| `gemini-extension.json` | Gemini CLI extension (`GEMINI.md` context file) |
+
+See [`docs/add-a-plugin.md`](docs/add-a-plugin.md) for the full repo layout and how to update the plugin.
 
 ## Quick start
 
-### Browse plugin
+- **Claude Code**: add this repo as a plugin marketplace, then install the `browse` plugin.
+- **Cursor**: add the marketplace, then install `browse`.
+- **Codex / Grok**: add the repo as a plugin marketplace and install `browse`.
+- **Gemini CLI**: install this repo as an extension (`gemini-extension.json` + `GEMINI.md`).
 
-```bash
-cd plugins/browse
-npm install      # Installs dependencies and auto-builds TypeScript
-```
+Then just ask your agent:
 
-The MCP server starts automatically when the plugin is active in Cursor. Just ask:
+- *"Go to Hacker News and get the top 5 stories."*
+- *"Fill out the signup form on example.com."*
+- *"Take a screenshot of localhost:3000."*
 
-- *"Go to Hacker News and get the top 5 stories"*
-- *"Fill out the signup form on example.com"*
-- *"Take a screenshot of localhost:3000"*
+No local server, no build step, no API key required for local browsing.
 
 ### Browserbase cloud (optional)
 
-For stealth browsing, proxies, and CAPTCHA solving:
+Remote stealth sessions, proxies, and CAPTCHA solving use a Browserbase API key:
 
 ```bash
 export BROWSERBASE_API_KEY="your-api-key"
-export BROWSERBASE_PROJECT_ID="your-project-id"
 ```
 
-Get credentials at [browserbase.com/settings](https://browserbase.com/settings).
-
-## Architecture
-
-The browse plugin runs an MCP server over stdio that wraps Playwright:
-
-```
-Cursor Model  ──MCP tool call──▶  MCP Server  ──Playwright──▶  Chrome
-     ▲                                │
-     │                                │
-     └──── screenshot file path ──────┘
-     └──── interactive elements ──────┘
-```
-
-- **No API key** needed for local Chrome automation
-- **Headed browser** -- you can watch the automation happen
-- **10 MCP tools**: navigate, click, type, snapshot, screenshot, scroll, evaluate, select, wait, close
-- **Persistent sessions** -- cookies and login state carry over via Chrome profile
-
-## Validation
-
-```bash
-node scripts/validate-template.mjs
-```
-
-## Troubleshooting
-
-### Chrome not found
-
-- **macOS/Windows**: Install from [google.com/chrome](https://www.google.com/chrome/)
-- **Linux**: `sudo apt install google-chrome-stable`
-
-### Profile refresh
-
-```bash
-rm -rf plugins/browse/.chrome-profile
-```
+Get a key at [browserbase.com/settings](https://browserbase.com/settings). Local mode uses Chrome/Chromium on your machine and needs no key.
 
 ## Resources
 
-- [Playwright Documentation](https://playwright.dev)
+- [browse CLI](https://github.com/browserbase/stagehand/tree/main/packages/cli)
+- [Adding or updating the plugin](docs/add-a-plugin.md)
 - [Browserbase](https://browserbase.com)
-- [MCP Specification](https://modelcontextprotocol.io)
-- [Cursor Marketplace](https://cursor.com)

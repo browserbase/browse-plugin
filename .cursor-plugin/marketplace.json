@@ -5,20 +5,13 @@
     "email": "support@browserbase.com"
   },
   "metadata": {
-    "description": "Browser automation tools for Cursor",
-    "version": "1.0.0",
-    "pluginRoot": "plugins"
+    "description": "Browse CLI — browser automation for agents"
   },
   "plugins": [
     {
       "name": "browse",
-      "source": "browse",
-      "description": "Automate web browser interactions using natural language. Navigate pages, click elements, fill forms, extract data, and take screenshots -- all controlled by Cursor's model via MCP tools."
-    },
-    {
-      "name": "functions",
-      "source": "functions",
-      "description": "Deploy serverless browser automation to Browserbase cloud using the bb CLI. Create, test, and publish cloud functions for scheduled or webhook-triggered browser tasks."
+      "source": ".",
+      "description": "Browser automation for AI agents: navigate, extract, screenshot, and interact with real web pages via a single CLI."
     }
   ]
 }
