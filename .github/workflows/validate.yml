@@ -33,6 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write
 
     steps:
       - uses: actions/checkout@v4
@@ -40,6 +41,8 @@ jobs:
           fetch-depth: 0
 
       - name: Tag plugin.json's version if untagged
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=$(node -pe "JSON.parse(require('fs').readFileSync('plugin.json', 'utf8')).version")
           TAG="v${VERSION}"
@@ -53,3 +56,11 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag "$TAG"
           git push origin "$TAG"
+
+          # A tag pushed with the default GITHUB_TOKEN does not trigger
+          # other workflows' push:tags events (GitHub's loop-prevention),
+          # so explicitly dispatch release.yml instead of relying on the
+          # push trigger to fire. release.yml's workflow_dispatch only
+          # exists on main, not on the tag itself, so dispatch against
+          # main and pass the tag as an input for it to check out.
+          gh workflow run release.yml --repo "${{ github.repository }}" -f tag="$TAG"
