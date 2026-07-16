@@ -4,6 +4,17 @@ on:
   push:
     tags:
       - "v*"
+  # tag-release (in validate.yml) pushes the tag using the default
+  # GITHUB_TOKEN, which GitHub does not allow to trigger other workflows
+  # (loop prevention), so it explicitly re-dispatches this workflow instead
+  # of relying on the push trigger above to fire. The tag input tells this
+  # run which tag to check out and release, since a workflow_dispatch run
+  # has no tag ref of its own to infer one from.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v0.3.0)"
+        required: true
 
 permissions:
   contents: write
@@ -14,6 +25,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -43,5 +56,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           files: release.tar.gz
           generate_release_notes: true
