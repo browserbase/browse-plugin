@@ -1,6 +1,6 @@
 # browse plugin marketplace
 
-Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI as a native plugin in Claude Code, Cursor, Codex, Grok, and Gemini CLI.
+Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI as a native plugin in Claude Code, Cursor, Codex, Grok, Muse Code, and Gemini CLI.
 
 This repo has no application code. It's a set of static JSON manifests that let each agent marketplace install and SHA-pin the `browse` plugin, plus the skill that teaches the agent to drive `browse` from the shell.
 
@@ -13,6 +13,7 @@ This repo has no application code. It's a set of static JSON manifests that let 
 | `.cursor-plugin/marketplace.json` | Cursor marketplace |
 | `.agents/plugins/marketplace.json` | Generic `.agents` marketplace |
 | `.grok-plugin/plugin.json` | Grok plugin |
+| `.muse-plugin/plugin.json` | Muse Code native plugin (uses the `.agents` marketplace above) |
 | `gemini-extension.json` | Gemini CLI extension (`GEMINI.md` context file) |
 
 See [`docs/add-a-plugin.md`](docs/add-a-plugin.md) for the full repo layout and how to update the plugin.
@@ -22,6 +23,7 @@ See [`docs/add-a-plugin.md`](docs/add-a-plugin.md) for the full repo layout and 
 - **Claude Code**: add this repo as a plugin marketplace, then install the `browse` plugin.
 - **Cursor**: add the marketplace, then install `browse`.
 - **Codex / Grok**: add the repo as a plugin marketplace and install `browse`.
+- **Muse Code**: install the native plugin from a local checkout or the marketplace. See [Muse Code setup](docs/muse-code.md).
 - **Gemini CLI**: install this repo as an extension (`gemini-extension.json` + `GEMINI.md`).
 
 Then just ask your agent:

@@ -7,6 +7,7 @@ export const VERSION_TARGET_PATHS = [
   path.join(".claude-plugin", "plugin.json"),
   path.join(".cursor-plugin", "plugin.json"),
   path.join(".grok-plugin", "plugin.json"),
+  path.join(".muse-plugin", "plugin.json"),
   "gemini-extension.json",
 ];
 
