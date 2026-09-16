@@ -15,6 +15,7 @@ If Browserbase ever needs a second distinct plugin, it belongs in its own dedica
 ├── .cursor-plugin/plugin.json           # Cursor plugin manifest
 ├── .agents/plugins/marketplace.json     # Generic .agents marketplace (path: ".")
 ├── .grok-plugin/plugin.json             # Grok plugin
+├── .muse-plugin/plugin.json             # Muse Code native plugin (uses .agents marketplace)
 ├── gemini-extension.json                # Gemini CLI extension
 ├── GEMINI.md                            # Gemini context file (CLI-only, no mcpServers)
 ├── plugin.json                          # Open Plugin spec manifest (vendor-neutral, e.g. `npx plugins add`)
@@ -28,7 +29,7 @@ If Browserbase ever needs a second distinct plugin, it belongs in its own dedica
     └── sync-version.mjs                 # propagates plugin.json's version to the others; --check fails without writing
 ```
 
-Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to repo root (`./skills/`, `assets/logo.svg`), and every root marketplace file's `"source"`/`"path"` is `"."`. The root `plugin.json` is a separate, vendor-neutral manifest ([Open Plugin spec](https://github.com/vercel-labs/open-plugin-spec) v1.0.0); it doesn't replace or override any per-client manifest and only needs updating when the plugin's name, version, or metadata changes.
+Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to repo root (`./skills/`, `assets/logo.svg`), and every root marketplace file's `"source"`/`"path"` is `"."`. Muse uses `capabilities.skills[].path` to reference `skills/browse/SKILL.md` from the same repo root; see [Muse Code setup](muse-code.md). The root `plugin.json` is a separate, vendor-neutral manifest ([Open Plugin spec](https://github.com/vercel-labs/open-plugin-spec) v1.0.0); it doesn't replace or override any per-client manifest and only needs updating when the plugin's name, version, or metadata changes.
 
 ## Updating the skill
 
@@ -38,7 +39,7 @@ Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to 
 
 ## Bumping the version
 
-`plugin.json`'s `version` tracks this repo's own release tags (`v0.1.0`, `v0.2.0`, ...), the same as the git tags already used for GitHub Releases. The published Cursor marketplace listing is built by `release.yml`, which only runs on a tag push — merging to `main` alone doesn't update it. `plugin.json` is the single source of truth for the other four: `.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `.grok-plugin/plugin.json`, and `gemini-extension.json` must all match it exactly.
+`plugin.json`'s `version` tracks this repo's own release tags (`v0.1.0`, `v0.2.0`, ...), the same as the git tags already used for GitHub Releases. The published Cursor marketplace listing is built by `release.yml`, which only runs on a tag push — merging to `main` alone doesn't update it. `plugin.json` is the single source of truth for the other five: `.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `.grok-plugin/plugin.json`, `.muse-plugin/plugin.json`, and `gemini-extension.json` must all match it exactly.
 
 To cut a release, bump `plugin.json`'s `version` and run:
 
@@ -46,7 +47,7 @@ To cut a release, bump `plugin.json`'s `version` and run:
 node scripts/sync-version.mjs
 ```
 
-CI fails if any of the five drift out of sync. Once that PR merges to `main`, a second CI job (`tag-release`, in `.github/workflows/validate.yml`) detects the version change and pushes the matching `vX.Y.Z` tag automatically — no one runs `git tag` by hand. That tag push is what triggers `release.yml` to actually validate, package, and publish the release. If `plugin.json`'s version didn't change on a given push to `main`, or a tag for that version already exists, `tag-release` is a no-op.
+CI fails if any of the six drift out of sync. Once that PR merges to `main`, a second CI job (`tag-release`, in `.github/workflows/validate.yml`) detects the version change and pushes the matching `vX.Y.Z` tag automatically — no one runs `git tag` by hand. That tag push is what triggers `release.yml` to actually validate, package, and publish the release. If `plugin.json`'s version didn't change on a given push to `main`, or a tag for that version already exists, `tag-release` is a no-op.
 
 ## Validate
 

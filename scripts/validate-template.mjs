@@ -357,10 +357,59 @@ async function main() {
     }
   }
 
+  await validateMusePlugin();
   await validateGeminiSync();
   await validateVersionSync();
 
   summarizeAndExit();
+}
+
+async function validateMusePlugin() {
+  const manifest = await readJsonFile(
+    path.join(repoRoot, ".muse-plugin", "plugin.json"), "Muse plugin manifest"
+  );
+  if (!manifest) return;
+
+  if (manifest.schemaVersion !== 1 || manifest.name !== "browse") {
+    addError('Muse plugin must use schemaVersion 1 and name "browse".');
+  }
+  if (typeof manifest.displayName !== "string" || !manifest.displayName.trim()) {
+    addError("Muse plugin displayName is required.");
+  }
+  if (manifest.compat?.source !== "native" || manifest.compat?.manifestDir !== ".muse-plugin") {
+    addError('Muse plugin compat must declare source "native" and manifestDir ".muse-plugin".');
+  }
+
+  const capabilities = manifest.capabilities;
+  const skills = capabilities?.skills;
+  if (!Array.isArray(skills) || skills.length !== 1 ||
+      skills[0]?.id !== "browse" || skills[0]?.path !== "skills/browse/SKILL.md" ||
+      skills[0]?.enabledDefault !== true) {
+    addError("Muse plugin must enable the shared skills/browse/SKILL.md as its browse skill.");
+  } else {
+    await validateReferencedPath(repoRoot, "capabilities.skills", skills[0].path, "Muse browse");
+  }
+
+  const emptyFamilies = ["commands", "hooks", "mcpServers", "reminders"];
+  for (const family of emptyFamilies) {
+    if (!Array.isArray(capabilities?.[family]) || capabilities[family].length !== 0) {
+      addError(`Muse plugin capabilities.${family} must be an empty array for this skill-only plugin.`);
+    }
+  }
+  for (const family of Object.keys(capabilities ?? {})) {
+    if (family !== "skills" && !emptyFamilies.includes(family)) {
+      addError(`Muse plugin has an unexpected capability family: ${family}.`);
+    }
+  }
+
+  const marketplace = await readJsonFile(
+    path.join(repoRoot, ".agents", "plugins", "marketplace.json"), "Muse-compatible marketplace"
+  );
+  const entry = Array.isArray(marketplace?.plugins)
+    ? marketplace.plugins.find((plugin) => plugin?.name === "browse") : null;
+  if (marketplace?.name !== "browserbase" || entry?.source?.source !== "local" || entry?.source?.path !== ".") {
+    addError('The .agents marketplace must list browse at the repository root (source "local", path ".").');
+  }
 }
 
 async function validateVersionSync() {
