@@ -6,13 +6,21 @@ The plugin declares one skill and no hooks, MCP servers, commands, or reminders.
 
 ## Requirements
 
-- Muse Code with plugin support. Tested with **1.3.0 (1.3.0-R3057.1)**.
-- Node.js and npm, with `browse` available on the `PATH` used to launch Muse. A separate cloud browser smoke test used **Browse 0.9.6**.
+- Muse Code with plugin support. Tested with **1.3.0 (1.3.0-R3233.1)** and **Muse Spark 1.3 Contributor**.
+- Node.js and npm, with `browse` available on the `PATH` used to launch Muse. The end-to-end test used **Browse 0.9.6** and **Node.js 24.19.0**.
 
 ```bash
 npm install -g browse
 browse --version
 ```
+
+Authenticate Muse before asking it to run a task:
+
+```bash
+muse login
+```
+
+An existing `META_API_KEY` also works. Muse authentication is separate from the Browserbase API key used for remote browsers.
 
 The tested Muse build gates plugin management behind an environment variable. If `muse plugins --help` reports that plugins are unavailable, enable it in your current shell:
 
@@ -82,7 +90,11 @@ These operations manage the plugin package. Update the separately installed CLI 
 
 ## Validation notes
 
-Verified with the Muse CLI: local and marketplace installation, skill discovery, inspect, enable/disable, update, and removal. Separately verified Browse opening a Browserbase session, reading a page title, taking a screenshot, and closing the session. A model-driven Muse browsing task still needs verification with an authenticated Muse account.
+Verified local and marketplace installation, skill discovery, inspect, enable/disable, update, and removal. Installation and discovery also passed in a fresh `node:24-bookworm` Docker container with fresh CLI installations and no mounted host home, config, or skill directories.
+
+The authenticated end-to-end test ran Muse Spark 1.3 Contributor through Muse Code. The trace records a successful `read_skill` of `plugin:browse:browse`, followed by Browse CLI commands that opened the public Selenium web form in Browserbase, filled and read back a unique text value, submitted the form, verified `Form submitted` / `Received!`, and saved a screenshot. An independent verifier checked the submitted URL and confirmation before stopping the browser session.
+
+Docker supplied isolation for this unattended test; Muse's nested shell sandbox and interactive approvals were disabled for that run. Normal installations retain Muse's usual approval and sandbox settings. The model-driven test covers remote Browserbase browsing; local browser launching was not tested in the container.
 
 Muse 1.3.0 accepts this repository with `valid: true` and full skill compatibility. It reports two warnings because the repository carries several clients' manifests: `ignored-root-manifest` for the Open Plugin manifest, and `multiple-manifests` when it selects the native Muse manifest ahead of Claude/Codex. These do not prevent installation or skill discovery.
 
