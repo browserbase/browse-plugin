@@ -1,6 +1,6 @@
 # browse plugin marketplace
 
-Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI as a native plugin in Claude Code, Cursor, Codex, Grok, Muse Code, and Gemini CLI.
+Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI as a native plugin in Google Antigravity, Claude Code, Cursor, Codex, Grok, Muse Code, and Gemini CLI.
 
 This repo has no application code. It's a set of static JSON manifests that let each agent marketplace install and SHA-pin the `browse` plugin, plus the skill that teaches the agent to drive `browse` from the shell.
 
@@ -8,6 +8,7 @@ This repo has no application code. It's a set of static JSON manifests that let 
 
 | Path | Marketplace format |
 |------|--------------------|
+| `.antigravity-plugin/plugin.json` | Google Antigravity marketplace |
 | `.claude-plugin/marketplace.json` | Claude Code marketplace |
 | `.codex-plugin/plugin.json` | Codex plugin |
 | `.cursor-plugin/marketplace.json` | Cursor marketplace |
@@ -20,6 +21,7 @@ See [`docs/add-a-plugin.md`](docs/add-a-plugin.md) for the full repo layout and 
 
 ## Quick start
 
+- **Antigravity**: install the plugin and start browsing (see [Antigravity setup](#antigravity) below).
 - **Claude Code**: add this repo as a plugin marketplace, then install the `browse` plugin.
 - **Cursor**: add the marketplace, then install `browse`.
 - **Codex / Grok**: add the repo as a plugin marketplace and install `browse`.
@@ -33,6 +35,30 @@ Then just ask your agent:
 - *"Take a screenshot of localhost:3000."*
 
 No local server, no build step, no API key required for local browsing.
+
+### Antigravity
+
+Install the plugin from this repo:
+
+```bash
+agy plugin install https://github.com/browserbase/browse-plugin
+```
+
+The plugin requires the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI:
+
+```bash
+npm install -g browse
+```
+
+> **Note:** The `browse` CLI currently requires Node.js 22 or later. A Node 20 WebSocket compatibility fix is in progress in the upstream Stagehand repository.
+
+For cloud browsers (remote sessions, proxies, CAPTCHA solving), set your Browserbase API key:
+
+```bash
+export BROWSERBASE_API_KEY="your-api-key"
+```
+
+Get a key at [browserbase.com/settings](https://browserbase.com/settings). Local mode uses Chrome/Chromium on your machine and needs no key.
 
 ### Browserbase cloud (optional)
 

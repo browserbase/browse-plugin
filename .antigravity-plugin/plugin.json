@@ -1,0 +1,29 @@
+{
+  "name": "browse",
+  "displayName": "Browserbase",
+  "version": "0.3.1",
+  "description": "Give your agent a real browser: navigate, click, type, screenshot, and extract data from any site, locally or on Browserbase cloud browsers.",
+  "logo": "assets/logo-antigravity.svg",
+  "suggestedPrompts": [
+    "Go to Hacker News and get the top 5 stories",
+    "Open browserbase.com and take a screenshot of the pricing page",
+    "Find the latest release notes for Stagehand and summarize them"
+  ],
+  "category": "Developer Tools",
+  "keywords": [
+    "browser",
+    "automation",
+    "browserbase",
+    "stagehand",
+    "web",
+    "scraping"
+  ],
+  "author": {
+    "name": "Browserbase",
+    "email": "support@browserbase.com",
+    "url": "https://browserbase.com"
+  },
+  "homepage": "https://docs.browserbase.com",
+  "repository": "https://github.com/browserbase/browse-plugin",
+  "license": "MIT"
+}

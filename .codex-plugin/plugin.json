@@ -3,7 +3,7 @@
   "description": "Browse CLI — browser automation for agents",
   "author": { "name": "Browserbase", "url": "https://browserbase.com" },
   "homepage": "https://browserbase.com",
-  "repository": "https://github.com/browserbase/stagehand",
+  "repository": "https://github.com/browserbase/browse-plugin",
   "license": "MIT",
   "keywords": ["browser", "automation", "browserbase", "stagehand"],
   "skills": "./skills/",

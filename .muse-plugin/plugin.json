@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "browse",
   "displayName": "Browserbase",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Browser automation for AI agents: navigate, extract, screenshot, and interact with real web pages via Browse CLI.",
   "compat": {
     "source": "native",
