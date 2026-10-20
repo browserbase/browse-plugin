@@ -56,14 +56,12 @@ The installed plugin should report `enabled: true`, `source: "antigravity"`, and
 
 Antigravity 1.4.2 validation reports warnings because it ignores the marketplace `category`, the root Open Plugin manifest, and Gemini CLI's `GEMINI.md`. The native Antigravity manifest takes precedence and the shared skill still loads. `--strict` treats these warnings as failures.
 
-Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI separately, using **Node.js 22.18.0 or later** to satisfy its Stagehand dependency:
+Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI separately:
 
 ```bash
 npm install -g browse
 browse --version
 ```
-
-Browse 0.11.2 advertises Node 20 support, but starting a browser on Node 20 fails with `WebSocket is not defined`. Use the supported Node version above.
 
 Start a new Antigravity session and ask: "Use the Browse skill to open https://example.com in a local browser, read the page title, and close the browser session."
 
