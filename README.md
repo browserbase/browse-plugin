@@ -26,7 +26,7 @@ See [`docs/add-a-plugin.md`](docs/add-a-plugin.md) for the full repo layout and 
 - **Codex / Grok**: add the repo as a plugin marketplace and install `browse`.
 - **Muse Code**: install the native plugin from a local checkout or the marketplace. See [Muse Code setup](docs/muse-code.md).
 - **Gemini CLI**: install this repo as an extension (`gemini-extension.json` + `GEMINI.md`).
-- **Antigravity**: install the plugin from this repo. See [Antigravity setup](#antigravity) below.
+- **Antigravity**: install with `agy plugin install https://github.com/browserbase/browse-plugin`.
 
 Then just ask your agent:
 
@@ -35,36 +35,6 @@ Then just ask your agent:
 - *"Take a screenshot of localhost:3000."*
 
 No local server, no build step, no API key required for local browsing.
-
-### Antigravity
-
-Use Antigravity CLI with plugin support (tested with **1.4.2**). Once this manifest is on the default branch, install from this repo:
-
-```bash
-agy plugin install https://github.com/browserbase/browse-plugin
-```
-
-To test a local checkout before merging, run these commands from its root:
-
-```bash
-agy plugin validate . --json
-agy plugin install .
-agy plugin list --json
-```
-
-The installed plugin should report `enabled: true`, `source: "antigravity"`, and one skill named `browse`. It discovers the shared `skills/browse/SKILL.md`, which guides the agent through installing the Browse CLI if needed.
-
-Antigravity 1.4.2 validation reports warnings because it ignores the marketplace `category`, the root Open Plugin manifest, and Gemini CLI's `GEMINI.md`. The native Antigravity manifest takes precedence and the shared skill still loads. `--strict` treats these warnings as failures.
-
-Start a new Antigravity session and ask: "Use the Browse skill to open https://example.com in a local browser, read the page title, and close the browser session."
-
-For cloud browsers (remote sessions, proxies, CAPTCHA solving), set your Browserbase API key:
-
-```bash
-export BROWSERBASE_API_KEY="your-api-key"
-```
-
-Get a key at [browserbase.com/settings](https://browserbase.com/settings). Local mode uses Chrome/Chromium on your machine and needs no key.
 
 ### Browserbase cloud (optional)
 
