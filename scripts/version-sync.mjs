@@ -4,6 +4,7 @@ import path from "node:path";
 export const SOURCE_VERSION_PATH = "plugin.json";
 
 export const VERSION_TARGET_PATHS = [
+  path.join(".antigravity-plugin", "plugin.json"),
   path.join(".claude-plugin", "plugin.json"),
   path.join(".cursor-plugin", "plugin.json"),
   path.join(".grok-plugin", "plugin.json"),

@@ -1,7 +1,7 @@
 {
   "name": "browse",
   "displayName": "Browserbase",
-  "version": "0.3.1",
+  "version": "0.3.0",
   "description": "Give your agent a real browser: navigate, click, type, screenshot, and extract data from any site, locally or on Browserbase cloud browsers.",
   "logo": "assets/logo-antigravity.svg",
   "suggestedPrompts": [
