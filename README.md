@@ -52,16 +52,9 @@ agy plugin install .
 agy plugin list --json
 ```
 
-The installed plugin should report `enabled: true`, `source: "antigravity"`, and one skill named `browse`. It discovers the shared `skills/browse/SKILL.md`; installing the plugin loads instructions and does not install the CLI.
+The installed plugin should report `enabled: true`, `source: "antigravity"`, and one skill named `browse`. It discovers the shared `skills/browse/SKILL.md`, which guides the agent through installing the Browse CLI if needed.
 
 Antigravity 1.4.2 validation reports warnings because it ignores the marketplace `category`, the root Open Plugin manifest, and Gemini CLI's `GEMINI.md`. The native Antigravity manifest takes precedence and the shared skill still loads. `--strict` treats these warnings as failures.
-
-Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI separately:
-
-```bash
-npm install -g browse
-browse --version
-```
 
 Start a new Antigravity session and ask: "Use the Browse skill to open https://example.com in a local browser, read the page title, and close the browser session."
 
