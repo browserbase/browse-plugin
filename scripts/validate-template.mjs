@@ -357,11 +357,34 @@ async function main() {
     }
   }
 
+  await validateAntigravityPlugin();
   await validateMusePlugin();
   await validateGeminiSync();
   await validateVersionSync();
 
   summarizeAndExit();
+}
+
+async function validateAntigravityPlugin() {
+  const manifest = await readJsonFile(
+    path.join(repoRoot, ".antigravity-plugin", "plugin.json"), "Antigravity plugin manifest"
+  );
+  if (!manifest) return;
+
+  if (manifest.name !== "browse") {
+    addError('Antigravity plugin must use name "browse".');
+  }
+  for (const field of ["displayName", "description", "logo"]) {
+    if (typeof manifest[field] !== "string" || !manifest[field].trim()) {
+      addError(`Antigravity plugin ${field} is required.`);
+    }
+  }
+  if (typeof manifest.logo === "string" && manifest.logo.trim()) {
+    await validateReferencedPath(repoRoot, "logo", manifest.logo, "Antigravity browse");
+  }
+
+  // Antigravity discovers the shared skill from the conventional skills/ directory.
+  await validateReferencedPath(repoRoot, "skills", "skills/browse/SKILL.md", "Antigravity browse");
 }
 
 async function validateMusePlugin() {

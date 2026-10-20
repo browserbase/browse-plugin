@@ -38,19 +38,34 @@ No local server, no build step, no API key required for local browsing.
 
 ### Antigravity
 
-Install the plugin from this repo:
+Use Antigravity CLI with plugin support (tested with **1.4.2**). Once this manifest is on the default branch, install from this repo:
 
 ```bash
 agy plugin install https://github.com/browserbase/browse-plugin
 ```
 
-The plugin requires the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI:
+To test a local checkout before merging, run these commands from its root:
+
+```bash
+agy plugin validate . --json
+agy plugin install .
+agy plugin list --json
+```
+
+The installed plugin should report `enabled: true`, `source: "antigravity"`, and one skill named `browse`. It discovers the shared `skills/browse/SKILL.md`; installing the plugin loads instructions and does not install the CLI.
+
+Antigravity 1.4.2 validation reports warnings because it ignores the marketplace `category`, the root Open Plugin manifest, and Gemini CLI's `GEMINI.md`. The native Antigravity manifest takes precedence and the shared skill still loads. `--strict` treats these warnings as failures.
+
+Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI separately, using **Node.js 22.18.0 or later** to satisfy its Stagehand dependency:
 
 ```bash
 npm install -g browse
+browse --version
 ```
 
-> **Note:** The `browse` CLI currently requires Node.js 22 or later. A Node 20 WebSocket compatibility fix is in progress in the upstream Stagehand repository.
+Browse 0.11.2 advertises Node 20 support, but starting a browser on Node 20 fails with `WebSocket is not defined`. Use the supported Node version above.
+
+Start a new Antigravity session and ask: "Use the Browse skill to open https://example.com in a local browser, read the page title, and close the browser session."
 
 For cloud browsers (remote sessions, proxies, CAPTCHA solving), set your Browserbase API key:
 

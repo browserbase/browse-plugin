@@ -16,10 +16,12 @@ If Browserbase ever needs a second distinct plugin, it belongs in its own dedica
 ├── .agents/plugins/marketplace.json     # Generic .agents marketplace (path: ".")
 ├── .grok-plugin/plugin.json             # Grok plugin
 ├── .muse-plugin/plugin.json             # Muse Code native plugin (uses .agents marketplace)
+├── .antigravity-plugin/plugin.json      # Antigravity plugin (discovers skills/ automatically)
 ├── gemini-extension.json                # Gemini CLI extension
 ├── GEMINI.md                            # Gemini context file (CLI-only, no mcpServers)
 ├── plugin.json                          # Open Plugin spec manifest (vendor-neutral, e.g. `npx plugins add`)
 ├── assets/logo.svg
+├── assets/logo-antigravity.svg          # Antigravity logo with transparent padding
 ├── skills/browse/SKILL.md               # YAML frontmatter: name + description
 └── scripts/
     ├── validate-template.mjs            # run by CI and locally, see "Validate" below
@@ -39,7 +41,7 @@ Every per-format `plugin.json`'s `"skills"` and `"logo"` fields are relative to 
 
 ## Bumping the version
 
-`plugin.json`'s `version` tracks this repo's own release tags (`v0.1.0`, `v0.2.0`, ...), the same as the git tags already used for GitHub Releases. The published Cursor marketplace listing is built by `release.yml`, which only runs on a tag push — merging to `main` alone doesn't update it. `plugin.json` is the single source of truth for the other five: `.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `.grok-plugin/plugin.json`, `.muse-plugin/plugin.json`, and `gemini-extension.json` must all match it exactly.
+`plugin.json`'s `version` tracks this repo's own release tags (`v0.1.0`, `v0.2.0`, ...), the same as the git tags already used for GitHub Releases. The published Cursor marketplace listing is built by `release.yml`, which only runs on a tag push — merging to `main` alone doesn't update it. `plugin.json` is the single source of truth for the other six: `.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `.grok-plugin/plugin.json`, `.muse-plugin/plugin.json`, `.antigravity-plugin/plugin.json`, and `gemini-extension.json` must all match it exactly.
 
 To cut a release, bump `plugin.json`'s `version` and run:
 
@@ -47,7 +49,7 @@ To cut a release, bump `plugin.json`'s `version` and run:
 node scripts/sync-version.mjs
 ```
 
-CI fails if any of the six drift out of sync. Once that PR merges to `main`, a second CI job (`tag-release`, in `.github/workflows/validate.yml`) detects the version change and pushes the matching `vX.Y.Z` tag automatically — no one runs `git tag` by hand. That tag push is what triggers `release.yml` to actually validate, package, and publish the release. If `plugin.json`'s version didn't change on a given push to `main`, or a tag for that version already exists, `tag-release` is a no-op.
+CI fails if any of the seven drift out of sync. Once that PR merges to `main`, a second CI job (`tag-release`, in `.github/workflows/validate.yml`) detects the version change and pushes the matching `vX.Y.Z` tag automatically — no one runs `git tag` by hand. That tag push is what triggers `release.yml` to actually validate, package, and publish the release. If `plugin.json`'s version didn't change on a given push to `main`, or a tag for that version already exists, `tag-release` is a no-op.
 
 ## Validate
 
