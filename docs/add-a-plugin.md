@@ -79,7 +79,7 @@ Fix all reported errors before committing. This also runs in CI on every pull re
 
 ## OpenCode plugin
 
-Unlike the other agent marketplaces that use static JSON manifests, OpenCode distributes plugins as npm packages. The `opencode/` directory is a publishable npm package (`@browserbasehq/opencode`) that:
+Unlike the other agent marketplaces that use static JSON manifests, OpenCode supports plugins distributed as npm packages (among other methods like local files). The `opencode/` directory is a publishable npm package (`@browserbasehq/opencode`) that:
 
 - Supports both OpenCode 1 (`plugin` config) and OpenCode 2 (`plugins` config) from the same package
 - Bundles the browse skill (a copy of `skills/browse/SKILL.md`)
