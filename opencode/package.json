@@ -39,6 +39,9 @@
   "scripts": {
     "check": "tsc --noEmit"
   },
+  "dependencies": {
+    "gray-matter": "^4.0.3"
+  },
   "devDependencies": {
     "@opencode-ai/plugin": "^1.19.5",
     "@opencode/plugin": "^2.2.5",

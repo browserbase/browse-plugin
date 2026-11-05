@@ -85,11 +85,39 @@ Unlike the other agent marketplaces that use static JSON manifests, OpenCode dis
 - Bundles the browse skill (a copy of `skills/browse/SKILL.md`)
 - Injects `BROWSERBASE_API_KEY` and `BROWSERBASE_PROJECT_ID` into shell commands when present
 
+### CI publishing
+
+The `.github/workflows/publish-opencode.yml` workflow publishes the package to npm automatically when `opencode/package.json`'s version changes on push to main. It uses npm OIDC trusted publishing (no `NPM_TOKEN` secret required).
+
+#### First-time setup (one-time, requires @browserbasehq npm org access)
+
+Before CI can publish, someone with access to the `@browserbasehq` npm organization must:
+
+1. **Create the package on npm** (if it doesn't exist):
+   ```bash
+   cd opencode && npm publish --access public
+   ```
+   Or just let the first CI run create it (it will fail, but the package name will be reserved).
+
+2. **Configure trusted publishing** on npmjs.com:
+   - Go to [npmjs.com/package/@browserbasehq/opencode](https://www.npmjs.com/package/@browserbasehq/opencode) → Settings → Publishing access
+   - Add a new trusted publisher:
+     - **Repository**: `browserbase/browse-plugin`
+     - **Workflow**: `publish-opencode.yml`
+     - **Environment**: (leave blank for default)
+
+After this one-time setup, CI will publish automatically on version bumps.
+
 ### Updating the OpenCode plugin
 
 1. Update `opencode/skills/browse/SKILL.md` when the shared skill changes (currently a manual copy)
-2. Bump the version in `opencode/package.json` when releasing
-3. Publish to npm with `cd opencode && npm publish` (requires npm publish rights to `@browserbasehq`)
+2. Bump the version in `opencode/package.json`
+3. Merge to main — CI publishes automatically once trusted publishing is configured
+
+For manual publishing (before trusted publishing is set up):
+```bash
+cd opencode && npm publish --access public
+```
 
 ### Installing for users
 

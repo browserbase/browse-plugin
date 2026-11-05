@@ -1,6 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import matter from "gray-matter";
 
 export const skillsDir = join(dirname(fileURLToPath(import.meta.url)), "skills");
 
@@ -12,30 +13,6 @@ export type BundledSkill = {
   content: string;
 };
 
-/**
- * Reads `name` and `description` from a SKILL.md frontmatter block, including `|` block scalars.
- * Covers the plain and block-scalar values the bundled skills use, not general YAML.
- */
-function frontmatter(text: string) {
-  const match = /^---\n([\s\S]*?)\n---\n?/.exec(text);
-  if (!match) return { fields: {} as Record<string, string>, content: text };
-  const fields: Record<string, string> = {};
-  const lines = match[1].split("\n");
-  for (let i = 0; i < lines.length; i++) {
-    const field = /^([\w-]+):\s*(.*)$/.exec(lines[i]);
-    if (!field) continue;
-    let value = field[2];
-    if (value === "|") {
-      const block: string[] = [];
-      while (i + 1 < lines.length && (lines[i + 1].startsWith("  ") || lines[i + 1] === ""))
-        block.push(lines[++i].trimStart());
-      value = block.join("\n").trim();
-    }
-    fields[field[1]] = value;
-  }
-  return { fields, content: text.slice(match[0].length) };
-}
-
 /** The bundled skills, for OpenCode 2, which takes skills from plugins as entries rather than directories. */
 export async function bundledSkills(): Promise<BundledSkill[]> {
   const entries = await readdir(skillsDir, { withFileTypes: true });
@@ -43,14 +20,14 @@ export async function bundledSkills(): Promise<BundledSkill[]> {
     entries
       .filter((entry) => entry.isDirectory())
       .map(async (entry) => {
-        const path = join(skillsDir, entry.name, "SKILL.md");
-        const raw = await readFile(path, "utf8");
-        const { fields, content } = frontmatter(raw);
+        const skillPath = join(skillsDir, entry.name, "SKILL.md");
+        const raw = await readFile(skillPath, "utf8");
+        const { data, content } = matter(raw);
         return {
           id: entry.name,
-          name: fields.name ?? entry.name,
-          ...(fields.description && { description: fields.description }),
-          path,
+          name: (data.name as string) ?? entry.name,
+          ...(data.description && { description: data.description as string }),
+          path: skillPath,
           content,
         };
       })

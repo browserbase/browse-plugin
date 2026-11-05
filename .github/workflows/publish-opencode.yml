@@ -1,0 +1,75 @@
+name: Publish OpenCode Plugin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "opencode/package.json"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Force publish even if version exists (will fail if already published)"
+        required: false
+        default: "false"
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: opencode
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Get package info
+        id: pkg
+        run: |
+          NAME=$(node -pe "require('./package.json').name")
+          VERSION=$(node -pe "require('./package.json').version")
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Package: $NAME@$VERSION"
+
+      - name: Check if version already published
+        id: check
+        run: |
+          if npm view "${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}" version 2>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Version ${{ steps.pkg.outputs.version }} already exists on npm"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Version ${{ steps.pkg.outputs.version }} not yet published"
+          fi
+
+      - name: Install dependencies
+        if: steps.check.outputs.exists == 'false' || inputs.force == 'true'
+        run: npm ci --ignore-scripts || npm install --ignore-scripts
+
+      - name: Type check
+        if: steps.check.outputs.exists == 'false' || inputs.force == 'true'
+        run: npm run check
+
+      # Uses npm OIDC trusted publishing - no NPM_TOKEN secret required.
+      # First-time setup: someone with @browserbasehq npm org access must
+      # configure this package to trust GitHub Actions from this repo/workflow.
+      # See: https://docs.npmjs.com/generating-provenance-statements
+      - name: Publish to npm
+        if: steps.check.outputs.exists == 'false' || inputs.force == 'true'
+        run: npm publish --access public --provenance
+
+      - name: Skip publish (version exists)
+        if: steps.check.outputs.exists == 'true' && inputs.force != 'true'
+        run: |
+          echo "::notice::Skipping publish - ${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }} already exists on npm"
