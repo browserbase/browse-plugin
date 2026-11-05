@@ -23,6 +23,14 @@ If Browserbase ever needs a second distinct plugin, it belongs in its own dedica
 ├── assets/logo.svg
 ├── assets/logo-antigravity.svg          # Antigravity logo with transparent padding
 ├── skills/browse/SKILL.md               # YAML frontmatter: name + description
+├── opencode/                            # OpenCode npm plugin package
+│   ├── package.json                     # npm manifest for @browserbasehq/opencode
+│   ├── index.ts                         # entrypoint (exports v1 + v2)
+│   ├── v1.ts                            # OpenCode 1 plugin hooks
+│   ├── v2.ts                            # OpenCode 2 plugin setup
+│   ├── skills.ts                        # bundled skills loader
+│   ├── skills/browse/SKILL.md           # copy of the shared skill
+│   └── README.md                        # OpenCode-specific install docs
 └── scripts/
     ├── validate-template.mjs            # run by CI and locally, see "Validate" below
     ├── gemini-sync.mjs                  # shared logic: derive GEMINI.md's expected content from SKILL.md
@@ -68,3 +76,32 @@ Fix all reported errors before committing. This also runs in CI on every pull re
 - A marketplace `source`/`path` pointing at anything other than `"."` — this repo has no nested plugin folder anymore.
 - Editing `skills/browse/SKILL.md` without running `node scripts/sync-gemini.mjs` afterward — CI fails if `GEMINI.md` drifts out of sync.
 - Bumping `plugin.json`'s `version` without running `node scripts/sync-version.mjs` afterward — CI fails if the other manifests drift out of sync.
+
+## OpenCode plugin
+
+Unlike the other agent marketplaces that use static JSON manifests, OpenCode distributes plugins as npm packages. The `opencode/` directory is a publishable npm package (`@browserbasehq/opencode`) that:
+
+- Supports both OpenCode 1 (`plugin` config) and OpenCode 2 (`plugins` config) from the same package
+- Bundles the browse skill (a copy of `skills/browse/SKILL.md`)
+- Injects `BROWSERBASE_API_KEY` and `BROWSERBASE_PROJECT_ID` into shell commands when present
+
+### Updating the OpenCode plugin
+
+1. Update `opencode/skills/browse/SKILL.md` when the shared skill changes (currently a manual copy)
+2. Bump the version in `opencode/package.json` when releasing
+3. Publish to npm with `cd opencode && npm publish` (requires npm publish rights to `@browserbasehq`)
+
+### Installing for users
+
+```bash
+opencode plugin add @browserbasehq/opencode
+npm install -g browse
+```
+
+Or in `opencode.jsonc`:
+
+```jsonc
+{
+  "plugins": ["@browserbasehq/opencode"]
+}
+```
