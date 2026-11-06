@@ -1,6 +1,6 @@
 # browse plugin marketplace
 
-Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI as a native plugin in Claude Code, Cursor, Codex, Grok, Muse Code, Gemini CLI, and Google Antigravity.
+Install the [`browse`](https://github.com/browserbase/stagehand/tree/main/packages/cli) CLI as a native plugin in Claude Code, Cursor, Codex, Grok, Muse Code, Gemini CLI, Google Antigravity, and OpenCode.
 
 This repo has no application code. It's a set of static JSON manifests that let each agent marketplace install and SHA-pin the `browse` plugin, plus the skill that teaches the agent to drive `browse` from the shell.
 
@@ -16,6 +16,7 @@ This repo has no application code. It's a set of static JSON manifests that let 
 | `.muse-plugin/plugin.json` | Muse Code native plugin (uses the `.agents` marketplace above) |
 | `gemini-extension.json` | Gemini CLI extension (`GEMINI.md` context file) |
 | `.antigravity-plugin/plugin.json` | Google Antigravity marketplace |
+| `opencode/` | OpenCode npm plugin (`@browserbasehq/opencode`) |
 
 See [`docs/add-a-plugin.md`](docs/add-a-plugin.md) for the full repo layout and how to update the plugin.
 
@@ -27,6 +28,7 @@ See [`docs/add-a-plugin.md`](docs/add-a-plugin.md) for the full repo layout and 
 - **Muse Code**: install the native plugin from a local checkout or the marketplace. See [Muse Code setup](docs/muse-code.md).
 - **Gemini CLI**: install this repo as an extension (`gemini-extension.json` + `GEMINI.md`).
 - **Antigravity**: install with `agy plugin install https://github.com/browserbase/browse-plugin`.
+- **OpenCode**: `opencode plugin add @browserbasehq/opencode` or add `"@browserbasehq/opencode"` to `plugins` in your `opencode.jsonc`. Then install the CLI: `npm install -g browse`.
 
 Then just ask your agent:
 

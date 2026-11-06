@@ -23,6 +23,14 @@ If Browserbase ever needs a second distinct plugin, it belongs in its own dedica
 ├── assets/logo.svg
 ├── assets/logo-antigravity.svg          # Antigravity logo with transparent padding
 ├── skills/browse/SKILL.md               # YAML frontmatter: name + description
+├── opencode/                            # OpenCode npm plugin package
+│   ├── package.json                     # npm manifest for @browserbasehq/opencode
+│   ├── index.ts                         # entrypoint (exports v1 + v2)
+│   ├── v1.ts                            # OpenCode 1 plugin hooks
+│   ├── v2.ts                            # OpenCode 2 plugin setup
+│   ├── skills.ts                        # bundled skills loader
+│   ├── skills/browse/SKILL.md           # copy of the shared skill
+│   └── README.md                        # OpenCode-specific install docs
 └── scripts/
     ├── validate-template.mjs            # run by CI and locally, see "Validate" below
     ├── gemini-sync.mjs                  # shared logic: derive GEMINI.md's expected content from SKILL.md
@@ -68,3 +76,60 @@ Fix all reported errors before committing. This also runs in CI on every pull re
 - A marketplace `source`/`path` pointing at anything other than `"."` — this repo has no nested plugin folder anymore.
 - Editing `skills/browse/SKILL.md` without running `node scripts/sync-gemini.mjs` afterward — CI fails if `GEMINI.md` drifts out of sync.
 - Bumping `plugin.json`'s `version` without running `node scripts/sync-version.mjs` afterward — CI fails if the other manifests drift out of sync.
+
+## OpenCode plugin
+
+Unlike the other agent marketplaces that use static JSON manifests, OpenCode supports plugins distributed as npm packages (among other methods like local files). The `opencode/` directory is a publishable npm package (`@browserbasehq/opencode`) that:
+
+- Supports both OpenCode 1 (`plugin` config) and OpenCode 2 (`plugins` config) from the same package
+- Bundles the browse skill (a copy of `skills/browse/SKILL.md`)
+- Injects `BROWSERBASE_API_KEY` and `BROWSERBASE_PROJECT_ID` into shell commands when present
+
+### CI publishing
+
+The `.github/workflows/publish-opencode.yml` workflow publishes the package to npm automatically when `opencode/package.json`'s version changes on push to main. It uses npm OIDC trusted publishing (no `NPM_TOKEN` secret required).
+
+#### First-time setup (one-time, requires @browserbasehq npm org access)
+
+Before CI can publish, someone with access to the `@browserbasehq` npm organization must:
+
+1. **Create the package on npm** (if it doesn't exist):
+   ```bash
+   cd opencode && npm publish --access public
+   ```
+   Or just let the first CI run create it (it will fail, but the package name will be reserved).
+
+2. **Configure trusted publishing** on npmjs.com:
+   - Go to [npmjs.com/package/@browserbasehq/opencode](https://www.npmjs.com/package/@browserbasehq/opencode) → Settings → Publishing access
+   - Add a new trusted publisher:
+     - **Repository**: `browserbase/browse-plugin`
+     - **Workflow**: `publish-opencode.yml`
+     - **Environment**: (leave blank for default)
+
+After this one-time setup, CI will publish automatically on version bumps.
+
+### Updating the OpenCode plugin
+
+1. Update `opencode/skills/browse/SKILL.md` when the shared skill changes (currently a manual copy)
+2. Bump the version in `opencode/package.json`
+3. Merge to main — CI publishes automatically once trusted publishing is configured
+
+For manual publishing (before trusted publishing is set up):
+```bash
+cd opencode && npm publish --access public
+```
+
+### Installing for users
+
+```bash
+opencode plugin add @browserbasehq/opencode
+npm install -g browse
+```
+
+Or in `opencode.jsonc`:
+
+```jsonc
+{
+  "plugins": ["@browserbasehq/opencode"]
+}
+```

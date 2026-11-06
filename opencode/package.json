@@ -1,0 +1,57 @@
+{
+  "name": "@browserbasehq/opencode",
+  "version": "0.4.0",
+  "description": "Browserbase browse plugin for OpenCode: browser automation, navigation, extraction, screenshots, and interaction via the browse CLI",
+  "type": "module",
+  "main": "index.ts",
+  "files": [
+    "index.ts",
+    "v1.ts",
+    "v2.ts",
+    "skills.ts",
+    "skills"
+  ],
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "browserbase",
+    "browser",
+    "automation",
+    "stagehand",
+    "browse",
+    "web-scraping",
+    "screenshot",
+    "llm",
+    "ai"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/browserbase/browse-plugin.git",
+    "directory": "opencode"
+  },
+  "homepage": "https://browserbase.com",
+  "author": {
+    "name": "Browserbase",
+    "email": "support@browserbase.com",
+    "url": "https://browserbase.com"
+  },
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.19.5",
+    "@opencode/plugin": "^2.2.5",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  },
+  "exports": {
+    ".": "./index.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
